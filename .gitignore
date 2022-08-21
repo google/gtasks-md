@@ -1,0 +1,9 @@
+.direnv/
+.idea/
+
+credentials.json
+token.json
+
+__pycache__/
+
+creds/
