@@ -15,7 +15,6 @@ let
     google-auth-httplib2
     google-auth-oauthlib
     python-pandoc
-    python-slugify
   ]);
 in pkgs.mkShell {
   buildInputs = with pkgs; [ pandoc pythonWithPackages ];
