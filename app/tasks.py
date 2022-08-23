@@ -1,7 +1,6 @@
 # https://stackoverflow.com/a/69802572
 from __future__ import annotations
 
-import datetime
 from dataclasses import dataclass
 from enum import Enum
 
@@ -12,24 +11,34 @@ class TaskStatus(Enum):
     COMPLETED = "completed"
 
 
+# https://developers.google.com/tasks/reference/rest/v1/tasks
 @dataclass
 class Task:
-    name: str
+    """Task definition matching Google Task API"""
+
+    title: str
     id: str
-    text: str
+    note: str
     position: int
     status: TaskStatus
     subtasks: list[Task]
 
-    def __str__(self):
-        return f"#{self.position}: {self.name} ({self.id}): {self.status}, {len(self.subtasks)} subtasks"
+    def __eq__(self, other: Task) -> bool:
+        return (
+            self.title == other.title
+            and self.note == other.note
+            and self.status == other.status
+            and len(self.subtasks) == len(other.subtasks)
+            and not any(st != ot for (st, ot) in zip(self.subtasks, other.subtasks))
+        )
 
-    def completed(self):
+    def __str__(self) -> str:
+        return f"#{self.position}: {self.title} ({self.id}): {self.status}, {len(self.subtasks)} subtasks"
+
+    def completed(self) -> bool:
         return self.status == TaskStatus.COMPLETED
 
-    def toRequest(self):
-        now = datetime.datetime.now(datetime.timezone.utc).isoformat()
-
+    def toRequest(self) -> dict[str, str]:
         status = "needsAction"
         if self.status == TaskStatus.COMPLETED:
             status = "completed"
@@ -37,39 +46,34 @@ class Task:
         return {
             "id": self.id,
             "kind": "tasks#task",
-            "notes": self.text,
+            "notes": self.note,
             "status": status,
-            "title": self.name,
+            "title": self.title,
         }
 
 
+# https://developers.google.com/tasks/reference/rest/v1/tasklists
 @dataclass
 class TaskList:
-    name: str
+    """Tasklist definition matching Google Task API"""
+
+    title: str
     id: str
     tasks: list[Task]
 
-    def __str__(self):
-        return f"{self.name} ({self.id}): {len(self.tasks)} tasks"
+    def __eq__(self, other: TaskList) -> bool:
+        return (
+            self.title == other.title
+            and len(self.tasks) == len(other.tasks)
+            and not any(st != ot for (st, ot) in zip(self.tasks, other.tasks))
+        )
 
-    def debug(self):
-        for task in self.tasks:
-            print(f"  {task}")
-            if task.text:
-                formattedNote = task.text.replace("\n", "    \n")
-                print(f"\n    {formattedNote}\n")
-            for subtask in task.subtasks:
-                print(f"    {subtask}")
-                if subtask.text:
-                    formattedNote = task.text.replace("\n", "      \n")
-                    print(f"\n      {formattedNote}\n")
+    def __str__(self) -> str:
+        return f"{self.title} ({self.id}): {len(self.tasks)} tasks"
 
-    def toRequest(self):
-        now = datetime.datetime.now(datetime.timezone.utc).isoformat()
-
+    def toRequest(self) -> dict[str, str]:
         return {
             "id": self.id,
             "kind": "tasks#taskList",
-            "title": self.name,
-            "updated": now,
+            "title": self.title,
         }

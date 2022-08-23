@@ -19,51 +19,51 @@ Str = types.Str  # type: ignore
 ORDERED_FIRST_ELEM = (1, Decimal(), Period())
 
 
-def tasklists_to_pandoc(taskLists: list[TaskList]) -> Pandoc:
-    def tasklist_header_to_pandoc(taskList: TaskList) -> Header:
-        match pandoc.read(taskList.name):
+def task_lists_to_pandoc(task_lists: list[TaskList]) -> Pandoc:
+    """Parses Task Lists to a Pandoc markdown representation"""
+
+    def task_list_header_to_pandoc(task_list: TaskList) -> Header:
+        match pandoc.read(task_list.title):
             case Pandoc(_, [Para(name)]):
                 return Header(2, ("", [], []), name)
             case _:
-                return Header(2, ("", [], []), [Str("ERROR")])
+                raise SyntaxError(f"Could not parse Task List title {task_list.title}")
 
-    def tasklist_tasks_to_pandoc(taskList: TaskList):
-        tasks = []
-        hasNotes = any(t.text for t in taskList.tasks)
-        for task in taskList.tasks:
-            tasks.append(task_to_pandoc(task, hasNotes))
+    def tasks_to_pandoc(tasks: list[Task]):
+        pandoc_tasks = []
+        has_notes = any(t.note for t in tasks)
+        for task in tasks:
+            pandoc_tasks.append(task_to_pandoc(task, has_notes))
 
-        return tasks
+        return pandoc_tasks
 
-    def task_to_pandoc(task: Task, usePara: bool):
+    def task_to_pandoc(task: Task, use_para: bool):
         pandocTask = []
 
-        match pandoc.read(task.name):
+        match pandoc.read(task.title):
             case Pandoc(_, [Para(name)]):
-                sign = "☐"
-                if task.status == TaskStatus.COMPLETED:
-                    sign = "☒"
-                str = [Str(sign), Space()] + name
+                sign = "☒" if task.completed() else "☐"
+                title = [Str(sign), Space()] + name
 
-                if usePara:
-                    pandocTask.append(Para(str))
-                    match pandoc.read(task.text):
-                        case Pandoc(_, [notee]):
-                            pandocTask.append(notee)
+                if use_para:
+                    pandocTask.append(Para(title))
+                    match pandoc.read(task.note):
+                        case Pandoc(_, [note]):
+                            pandocTask.append(note)
                         case Pandoc(_, []):
                             pass
                         case _:
-                            pandocTask.append(Para([Str("ERROR")]))
+                            raise SyntaxError(f"Could not parse Task note {task.note}")
                 else:
-                    pandocTask.append(Plain(str))
+                    pandocTask.append(Plain(title))
             case _:
-                pandocTask.append(Plain([Str("ERROR")]))
+                raise SyntaxError(f"Could not parse Task title {task.title}")
 
         if task.subtasks:
             subtasks = []
-            hasNotes = any(st.text for st in task.subtasks)
+            has_notes = any(st.note for st in task.subtasks)
             for subtask in task.subtasks:
-                subtasks.append(task_to_pandoc(subtask, hasNotes))
+                subtasks.append(task_to_pandoc(subtask, has_notes))
 
             pandocTask.append(OrderedList(ORDERED_FIRST_ELEM, subtasks))
 
@@ -73,63 +73,65 @@ def tasklists_to_pandoc(taskLists: list[TaskList]) -> Pandoc:
         Header(1, ("todo", [], []), [Str("TODO")]),
     ]
 
-    for taskList in taskLists:
-        content.append(tasklist_header_to_pandoc(taskList))
+    for task_list in task_lists:
+        content.append(task_list_header_to_pandoc(task_list))
         content.append(
-            OrderedList(ORDERED_FIRST_ELEM, tasklist_tasks_to_pandoc(taskList))
+            OrderedList(ORDERED_FIRST_ELEM, tasks_to_pandoc(task_list.tasks))
         )
 
     return Pandoc(Meta({}), content)
 
 
-def pandoc_to_tasklists(doc: Pandoc) -> list[TaskList]:
-    def parse_tasklists(items, idx):
+def pandoc_to_task_lists(doc: Pandoc) -> list[TaskList]:
+    """Parses Pandoc markdown representation to Task Lists"""
+
+    def parse_task_lists(items, idx):
         if idx >= len(items):
             return []
 
         match items[idx]:
             case Header(1, _, _):
-                return parse_tasklists(items, idx + 1)
+                return parse_task_lists(items, idx + 1)
             case Header(2, _, hd):
-                taskList = TaskList(pandoc.write(hd).strip(), "", [])
+                task_list = TaskList(pandoc.write(hd).strip(), "", [])
                 match items[idx + 1]:
                     case OrderedList(_, tasks):
-                        taskList.tasks = parse_tasks(tasks)
-                        return [taskList] + parse_tasklists(items, idx + 2)
+                        task_list.tasks = parse_tasks(tasks)
+                        return [task_list] + parse_task_lists(items, idx + 2)
                     case _:
-                        return [taskList] + parse_tasklists(items, idx + 1)
+                        return [task_list] + parse_task_lists(items, idx + 1)
             case _:
-                print("ERROR")
-                exit(1)
+                raise SyntaxError(f"Unexpected item while parsing: {items[idx]}")
 
     def parse_tasks(tasks):
-        parsedTasks = []
+        parsed_tasks = []
 
         for i, task in enumerate(tasks):
-            parsedTasks.append(parse_task(task, i))
+            parsed_tasks.append(parse_task(task, i))
 
-        return parsedTasks
+        return parsed_tasks
 
     def parse_task(task, taskNo):
+        def match_status(str: Str) -> TaskStatus:
+            match str:
+                case Str("☐"):
+                    return TaskStatus.PENDING
+                case Str("☒"):
+                    return TaskStatus.COMPLETED
+                case _:
+                    raise SyntaxError(f"Expected status checkbox, got: ${str}")
+
         name = ""
         status = TaskStatus.UNKNOWN
         match task[0]:
             case Plain(txt):
-                match txt[0]:
-                    case Str("☐"):
-                        status = TaskStatus.PENDING
-                    case Str("☒"):
-                        status = TaskStatus.COMPLETED
+                status = match_status(txt[0])
                 name = pandoc.write(Plain(txt[2:])).strip()
             case Para(txt):
-                match txt[0]:
-                    case Str("☐"):
-                        status = TaskStatus.PENDING
-                    case Str("☒"):
-                        status = TaskStatus.COMPLETED
+                status = match_status(txt[0])
                 name = pandoc.write(Plain(txt[2:])).strip()
             case _:
-                name = "UNKNOWN"
+                raise SyntaxError(f"Expected Task status and title, got {task[0]}")
 
         note = ""
         if len(task) > 1:
@@ -139,16 +141,16 @@ def pandoc_to_tasklists(doc: Pandoc) -> list[TaskList]:
                 case Para(txt):
                     note = pandoc.write(Plain(txt)).strip()
 
-        parsedTask = Task(name, "", note, taskNo, status, [])
+        parsed_task = Task(name, "", note, taskNo, status, [])
 
         match task[-1]:
             case OrderedList(_, subtasks):
-                parsedTask.subtasks = parse_tasks(subtasks)
+                parsed_task.subtasks = parse_tasks(subtasks)
 
-        return parsedTask
+        return parsed_task
 
     match doc:
         case Pandoc(_, items):
-            return parse_tasklists(items, 0)
-
-    return []
+            return parse_task_lists(items, 0)
+        case _:
+            raise SyntaxError("Expected Pandoc markdown representation.")
