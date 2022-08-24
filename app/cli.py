@@ -8,7 +8,8 @@ from xdg import xdg_cache_home, xdg_config_home
 
 from .editor import Editor
 from .googleapi import GoogleApiService
-from .pandoc import pandoc_to_task_lists, task_lists_to_pandoc
+from .pandoc import (pandoc_to_string, pandoc_to_task_lists,
+                     task_lists_to_pandoc)
 
 
 def main():
@@ -116,7 +117,7 @@ def reconcile(service: GoogleApiService, file_path: str):
 def fetch_task_lists(service: GoogleApiService):
     task_lists = asyncio.run(service.fetch_task_lists())
     doc = task_lists_to_pandoc(task_lists)
-    return task_lists, pandoc.write(doc)
+    return task_lists, pandoc_to_string(doc)
 
 
 if __name__ == "__main__":

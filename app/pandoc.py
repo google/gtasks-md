@@ -94,12 +94,16 @@ def pandoc_to_task_lists(doc: Pandoc) -> list[TaskList]:
                 return parse_task_lists(items, idx + 1)
             case Header(2, _, hd):
                 task_list = TaskList(pandoc.write(hd).strip(), "", [])
-                match items[idx + 1]:
-                    case OrderedList(_, tasks):
-                        task_list.tasks = parse_tasks(tasks)
-                        return [task_list] + parse_task_lists(items, idx + 2)
-                    case _:
-                        return [task_list] + parse_task_lists(items, idx + 1)
+
+                if idx + 1 < len(items):
+                    match items[idx + 1]:
+                        case OrderedList(_, tasks):
+                            task_list.tasks = parse_tasks(tasks)
+                            return [task_list] + parse_task_lists(items, idx + 2)
+                        case _:
+                            return [task_list] + parse_task_lists(items, idx + 1)
+                else:
+                    return [task_list]
             case _:
                 raise SyntaxError(f"Unexpected item while parsing: {items[idx]}")
 
@@ -134,12 +138,12 @@ def pandoc_to_task_lists(doc: Pandoc) -> list[TaskList]:
                 raise SyntaxError(f"Expected Task status and title, got {task[0]}")
 
         note = ""
-        if len(task) > 1:
-            match task[1]:
-                case Plain(txt):
-                    note = pandoc.write(Plain(txt)).strip()
-                case Para(txt):
-                    note = pandoc.write(Plain(txt)).strip()
+        for item in task[1:]:
+            match item:
+                case OrderedList(_, _):
+                    break
+                case _:
+                    note += pandoc.write(Pandoc(Meta({}), [item]))
 
         parsed_task = Task(name, "", note, taskNo, status, [])
 
@@ -154,3 +158,7 @@ def pandoc_to_task_lists(doc: Pandoc) -> list[TaskList]:
             return parse_task_lists(items, 0)
         case _:
             raise SyntaxError("Expected Pandoc markdown representation.")
+
+
+def pandoc_to_string(doc: Pandoc) -> str:
+    return pandoc.write(doc)
