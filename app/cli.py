@@ -34,6 +34,9 @@ def main():
             service = GoogleApiService(args.user)
             editor = Editor(args.editor)
             edit(service, editor)
+        case "reconcile":
+            service = GoogleApiService(args.user)
+            reconcile(service, args.file_path)
         case "view":
             service = GoogleApiService(args.user)
             view(service)
@@ -72,6 +75,15 @@ def parse_args():
         type=str,
     )
 
+    reconcile_parser = subparsers.add_parser(
+        "reconcile", help="Patch tasklists with an offline source."
+    )
+    reconcile_parser.add_argument(
+        "file_path",
+        help="Location of the source file.",
+        type=str,
+    )
+
     return parser.parse_args()
 
 
@@ -88,9 +100,16 @@ def view(service: GoogleApiService):
 def edit(service: GoogleApiService, editor: Editor):
     old_task_lists, old_text = fetch_task_lists(service)
     new_text = editor.edit(old_text)
-    print(new_text)
     new_task_lists = pandoc_to_task_lists(pandoc.read(new_text))
     service.reconcile(old_task_lists, new_task_lists)
+
+
+def reconcile(service: GoogleApiService, file_path: str):
+    old_task_lists, _ = fetch_task_lists(service)
+    with open(file_path, "r") as source:
+        new_text = source.read()
+        new_task_lists = pandoc_to_task_lists(pandoc.read(new_text))
+        service.reconcile(old_task_lists, new_task_lists)
 
 
 def fetch_task_lists(service: GoogleApiService):
