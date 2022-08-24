@@ -82,7 +82,7 @@ class GoogleApiService:
                         task_list.tasks,
                         task_list_id,
                     )
-                    fix_task_order(task_list_id, new_tasks, "")
+                    fix_task_order(task_list_id, task_list.tasks, new_tasks)
                     logging.info(f"Added Task List {task_list.title}")
 
                 case (ReconcileOp.UPDATE, old_task_list, new_task_list):
@@ -92,7 +92,7 @@ class GoogleApiService:
                             new_task_list.tasks,
                             old_task_list.id,
                         )
-                        fix_task_order(old_task_list.id, new_tasks, "")
+                        fix_task_order(old_task_list.id, old_task_list.tasks, new_tasks)
                         logging.info(f"Updated Task List {old_task_list.title}")
 
         def gen_task_ops(old_tasks: list[Task], new_tasks: list[Task]):
@@ -150,21 +150,30 @@ class GoogleApiService:
                                 new_task.subtasks,
                                 task_list_id,
                             )
-                            fix_task_order(task_list_id, new_subtasks, old_task.id)
+                            fix_task_order(
+                                task_list_id,
+                                old_task.subtasks,
+                                new_subtasks,
+                                old_task.id,
+                            )
                             new_tasks[idx].subtasks = new_subtasks
 
                             logging.info(f"Updated Task {old_task.title}")
 
             return new_tasks
 
-        def fix_task_order(task_list_id, tasks, parent):
-            for i, task in enumerate(tasks):
+        def fix_task_order(task_list_id, old_tasks, new_tasks, parent=""):
+            old_task_to_previous = {}
+            for i, task in enumerate(old_tasks):
+                old_task_to_previous[task.id] = old_tasks[i - 1].id if i > 0 else ""
+
+            for i, task in enumerate(new_tasks):
                 if not task.completed():
-                    previous_task = tasks[i - 1] if i > 0 else None
+                    previous_task = new_tasks[i - 1] if i > 0 else None
                     previous_task_id = previous_task.id if previous_task else ""
-                    previous_task_title = (
-                        previous_task.title if previous_task else "NONE"
-                    )
+
+                    if previous_task_id == old_task_to_previous.get(task.id, ""):
+                        continue
 
                     self.tasks().move(
                         tasklist=task_list_id,
@@ -173,6 +182,9 @@ class GoogleApiService:
                         previous=previous_task_id,
                     ).execute()
 
+                    previous_task_title = (
+                        previous_task.title if previous_task else "NONE"
+                    )
                     logging.info(
                         f"Moved task {task.title} after {previous_task_title} (parent: {parent})"
                     )
