@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import os
 from datetime import datetime, timedelta, timezone
@@ -32,7 +33,7 @@ class GoogleApiService:
             self._service = build("tasks", "v1", credentials=self.get_credentials())
         return self._service.tasklists()
 
-    def reconcile(self, old_task_lists: list[TaskList], new_task_lists: list[TaskList]):
+    async def reconcile(self, old_task_lists: list[TaskList], new_task_lists: list[TaskList]):
         """
         Reconciles differences between new and old task lists.
 
@@ -63,37 +64,34 @@ class GoogleApiService:
 
             return list(task_list_to_op.values())
 
-        def apply_task_list_ops(ops):
-            for op in ops:
-                match op:
-                    case (ReconcileOp.REMOVE, task_list):
-                        self.task_lists().delete(tasklist=task_list.id).execute()
-                        logging.info(f"Removed Task List {task_list.title}")
+        async def apply_task_list_op(op):
+            match op:
+                case (ReconcileOp.REMOVE, task_list):
+                    self.task_lists().delete(tasklist=task_list.id).execute()
+                    logging.info(f"Removed Task List {task_list.title}")
 
-                    case (ReconcileOp.ADD, task_list):
-                        response = (
-                            self.task_lists()
-                            .insert(body=task_list.toRequest())
-                            .execute()
-                        )
-                        task_list_id = response["id"]
+                case (ReconcileOp.ADD, task_list):
+                    response = (
+                        self.task_lists().insert(body=task_list.toRequest()).execute()
+                    )
+                    task_list_id = response["id"]
+                    new_tasks = apply_task_ops(
+                        gen_task_ops([], task_list.tasks),
+                        task_list.tasks,
+                        task_list_id,
+                    )
+                    fix_task_order(task_list_id, new_tasks, "")
+                    logging.info(f"Added Task List {task_list.title}")
+
+                case (ReconcileOp.UPDATE, old_task_list, new_task_list):
+                    if old_task_list != new_task_list:
                         new_tasks = apply_task_ops(
-                            gen_task_ops([], task_list.tasks),
-                            task_list.tasks,
-                            task_list_id,
+                            gen_task_ops(old_task_list.tasks, new_task_list.tasks),
+                            new_task_list.tasks,
+                            old_task_list.id,
                         )
-                        fix_task_order(task_list_id, new_tasks, "")
-                        logging.info(f"Added Task List {task_list.title}")
-
-                    case (ReconcileOp.UPDATE, old_task_list, new_task_list):
-                        if old_task_list != new_task_list:
-                            new_tasks = apply_task_ops(
-                                gen_task_ops(old_task_list.tasks, new_task_list.tasks),
-                                new_task_list.tasks,
-                                old_task_list.id,
-                            )
-                            fix_task_order(old_task_list.id, new_tasks, "")
-                            logging.info(f"Updated Task List {old_task_list.title}")
+                        fix_task_order(old_task_list.id, new_tasks, "")
+                        logging.info(f"Updated Task List {old_task_list.title}")
 
         def gen_task_ops(old_tasks: list[Task], new_tasks: list[Task]):
             task_to_op = {}
@@ -177,7 +175,10 @@ class GoogleApiService:
                         f"Moved task {task.title} after {previous_task_title} (parent: {parent})"
                     )
 
-        apply_task_list_ops(gen_tasklist_ops())
+        tasks = []
+        for op in gen_tasklist_ops():
+            tasks.append(asyncio.create_task(apply_task_list_op(op)))
+        await asyncio.gather(*tasks)
 
     def get_task_lists(self) -> list[TaskList]:
         """

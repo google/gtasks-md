@@ -1,4 +1,5 @@
 import argparse
+import asyncio
 import logging
 import os
 
@@ -101,7 +102,7 @@ def edit(service: GoogleApiService, editor: Editor):
     old_task_lists, old_text = fetch_task_lists(service)
     new_text = editor.edit(old_text)
     new_task_lists = pandoc_to_task_lists(pandoc.read(new_text))
-    service.reconcile(old_task_lists, new_task_lists)
+    asyncio.run(service.reconcile(old_task_lists, new_task_lists))
 
 
 def reconcile(service: GoogleApiService, file_path: str):
@@ -109,7 +110,7 @@ def reconcile(service: GoogleApiService, file_path: str):
     with open(file_path, "r") as source:
         new_text = source.read()
         new_task_lists = pandoc_to_task_lists(pandoc.read(new_text))
-        service.reconcile(old_task_lists, new_task_lists)
+        asyncio.run(service.reconcile(old_task_lists, new_task_lists))
 
 
 def fetch_task_lists(service: GoogleApiService):
