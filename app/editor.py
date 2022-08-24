@@ -1,6 +1,7 @@
 import os
 import subprocess
 import tempfile
+from pathlib import Path
 
 from xdg import xdg_cache_home
 
@@ -10,8 +11,8 @@ class Editor:
     Handles all editor-related functionality.
     """
 
-    def __init__(self, editor: str = ""):
-        self.format = format
+    def __init__(self, editor, user):
+        self.user = user
 
         if editor:
             self.editor = editor
@@ -49,14 +50,16 @@ class Editor:
         return out
 
     def _backup(self, text: str):
-        cacheDir = f"{xdg_cache_home()}/gtasks-md"
+        cache_dir = f"{xdg_cache_home()}/gtasks-md/{self.user}"
+        marker_file = f"{cache_dir}/marker"
 
-        with open(f"{cacheDir}/marker", "r+") as marker_file:
+        Path(marker_file).touch()
+        with open(f"{cache_dir}/marker", "r+") as marker_file:
             marker = marker_file.read()
             file_no = ((int(marker) if marker else 0) + 1) % 10
             marker_file.seek(0)
             marker_file.write(str(file_no))
             marker_file.truncate()
 
-            with open(f"{cacheDir}/{file_no}.bak.md", "w") as backup_file:
+            with open(f"{cache_dir}/{file_no}.bak.md", "w") as backup_file:
                 backup_file.write(text)

@@ -33,7 +33,7 @@ def main():
             auth(service, args.credentials_file)
         case "edit":
             service = GoogleApiService(args.user)
-            editor = Editor(args.editor)
+            editor = Editor(args.editor, args.user)
             edit(service, editor)
         case "reconcile":
             service = GoogleApiService(args.user)
