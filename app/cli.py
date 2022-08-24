@@ -77,7 +77,7 @@ def parse_args():
     )
 
     reconcile_parser = subparsers.add_parser(
-        "reconcile", help="Patch tasklists with an offline source."
+        "reconcile", help="Patch Task Lists with an offline source."
     )
     reconcile_parser.add_argument(
         "file_path",
@@ -114,7 +114,7 @@ def reconcile(service: GoogleApiService, file_path: str):
 
 
 def fetch_task_lists(service: GoogleApiService):
-    task_lists = service.get_task_lists()
+    task_lists = service.fetch_task_lists()
     doc = task_lists_to_pandoc(task_lists)
     return task_lists, pandoc.write(doc)
 

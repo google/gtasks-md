@@ -33,7 +33,9 @@ class GoogleApiService:
             self._service = build("tasks", "v1", credentials=self.get_credentials())
         return self._service.tasklists()
 
-    async def reconcile(self, old_task_lists: list[TaskList], new_task_lists: list[TaskList]):
+    async def reconcile(
+        self, old_task_lists: list[TaskList], new_task_lists: list[TaskList]
+    ):
         """
         Reconciles differences between new and old task lists.
 
@@ -180,7 +182,7 @@ class GoogleApiService:
             tasks.append(asyncio.create_task(apply_task_list_op(op)))
         await asyncio.gather(*tasks)
 
-    def get_task_lists(self) -> list[TaskList]:
+    def fetch_task_lists(self) -> list[TaskList]:
         """
         Fetches all tasks from the server.
 
@@ -189,31 +191,40 @@ class GoogleApiService:
         or still pending completion.
         """
 
-        def get_tasks(task_list: TaskList):
-            one_month_ago = datetime.now(timezone.utc) - timedelta(days=30)
-
-            items = []
-            next_page_token = ""
-            while True:
-                result = (
-                    self.tasks()
-                    .list(
-                        #                       completedMax=one_month_ago.astimezone().isoformat(),
-                        maxResults=100,
-                        pageToken=next_page_token,
-                        showHidden=True,
-                        tasklist=task_list,
-                    )
-                    .execute()
+        def process_tasks(task_list):
+            def fetch_tasks(completed):
+                one_month_ago = (
+                    (datetime.now(timezone.utc) - timedelta(days=30))
+                    .astimezone()
+                    .isoformat()
+                    if completed
+                    else ""
                 )
-                items = items + result.get("items", [])
-                next_page_token = result.get("nextPageToken", "")
-                if not next_page_token:
-                    break
+
+                items = []
+                next_page_token = ""
+                while True:
+                    result = (
+                        self.tasks()
+                        .list(
+                            completedMin=one_month_ago,
+                            pageToken=next_page_token,
+                            showCompleted=completed,
+                            showHidden=completed,
+                            tasklist=task_list,
+                        )
+                        .execute()
+                    )
+                    items = items + result.get("items", [])
+                    next_page_token = result.get("nextPageToken", "")
+                    if not next_page_token:
+                        break
+
+                return items
 
             tasks = {}
             subtasks = []
-            for task in items:
+            for task in fetch_tasks(False) + fetch_tasks(True):
                 parsed_task = Task(
                     task["title"].strip(),
                     task["id"],
@@ -246,7 +257,7 @@ class GoogleApiService:
         task_lists = []
         for taskList in result.get("items", []):
             id = taskList["id"]
-            task_lists.append(TaskList(taskList["title"], id, get_tasks(id)))
+            task_lists.append(TaskList(taskList["title"], id, process_tasks(id)))
 
         return task_lists
 
