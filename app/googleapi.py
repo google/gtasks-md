@@ -189,22 +189,22 @@ class GoogleApiService:
                         f"Moved task {task.title} after {previous_task_title} (parent: {parent})"
                     )
 
-        tasks = []
+        async_tasks = []
         for op in gen_tasklist_ops():
-            tasks.append(asyncio.create_task(apply_task_list_op(op)))
-        await asyncio.gather(*tasks)
+            async_tasks.append(asyncio.create_task(apply_task_list_op(op)))
+        await asyncio.gather(*async_tasks)
 
-    def fetch_task_lists(self) -> list[TaskList]:
+    async def fetch_task_lists(self) -> list[TaskList]:
         """
         Fetches all tasks from the server.
 
         At first the function fetches up to 100 task lists. Then it fetches all
         tasks for these task lists that are either completed at most 30 days ago
-        or still pending completion.
+        or are still pending completion.
         """
 
-        def process_tasks(task_list):
-            def fetch_tasks(completed):
+        async def process_task_list(id, title):
+            async def fetch_tasks(completed):
                 one_month_ago = (
                     (datetime.now(timezone.utc) - timedelta(days=30))
                     .astimezone()
@@ -223,7 +223,7 @@ class GoogleApiService:
                             pageToken=next_page_token,
                             showCompleted=completed,
                             showHidden=completed,
-                            tasklist=task_list,
+                            tasklist=id,
                         )
                         .execute()
                     )
@@ -234,9 +234,14 @@ class GoogleApiService:
 
                 return items
 
+            incompleted, completed = await asyncio.gather(
+                asyncio.create_task(fetch_tasks(False)),
+                asyncio.create_task(fetch_tasks(True)),
+            )
+
             tasks = {}
             subtasks = []
-            for task in fetch_tasks(False) + fetch_tasks(True):
+            for task in incompleted + completed:
                 parsed_task = Task(
                     task["title"].strip(),
                     task["id"],
@@ -262,16 +267,18 @@ class GoogleApiService:
             for task in out:
                 task.subtasks.sort(key=lambda st: st.position)
 
-            return out
+            return TaskList(title, id, out)
 
         result = self.task_lists().list(maxResults=100).execute()
 
-        task_lists = []
-        for taskList in result.get("items", []):
-            id = taskList["id"]
-            task_lists.append(TaskList(taskList["title"], id, process_tasks(id)))
+        async_tasks = []
+        for task_list in result.get("items", []):
+            async_task = asyncio.create_task(
+                process_task_list(task_list["id"], task_list["title"])
+            )
+            async_tasks.append(async_task)
 
-        return task_lists
+        return await asyncio.gather(*async_tasks)
 
     # https://developers.google.com/tasks/quickstart/python#step_2_configure_the_sample
     def get_credentials(self) -> Credentials:

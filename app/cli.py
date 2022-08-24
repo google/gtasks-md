@@ -114,7 +114,7 @@ def reconcile(service: GoogleApiService, file_path: str):
 
 
 def fetch_task_lists(service: GoogleApiService):
-    task_lists = service.fetch_task_lists()
+    task_lists = asyncio.run(service.fetch_task_lists())
     doc = task_lists_to_pandoc(task_lists)
     return task_lists, pandoc.write(doc)
 
