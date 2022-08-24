@@ -128,7 +128,20 @@ class GoogleApiService:
                             .insert(tasklist=task_list_id, body=task.toRequest())
                             .execute()
                         )
-                        new_tasks[idx].id = response["id"]  # Needed for fix_task_order
+                        task_id = response["id"]
+                        new_tasks[idx].id = task_id  # Needed for fix_task_order
+
+                        new_subtasks = apply_task_ops(
+                            gen_task_ops([], task.subtasks),
+                            task.subtasks,
+                            task_list_id,
+                        )
+                        fix_task_order(
+                            task_list_id,
+                            new_subtasks,
+                            task_id,
+                        )
+                        new_tasks[idx].subtasks = new_subtasks
                         logging.info(f"Added Task {task.title}")
 
                     case (ReconcileOp.UPDATE, old_task, new_task, idx):
