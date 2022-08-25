@@ -16,8 +16,8 @@ class TaskStatus(Enum):
 class Task:
     """Task definition matching Google Task API"""
 
-    title: str
     id: str
+    title: str
     note: str
     position: int
     status: TaskStatus
@@ -57,8 +57,8 @@ class Task:
 class TaskList:
     """Tasklist definition matching Google Task API"""
 
-    title: str
     id: str
+    title: str
     tasks: list[Task]
 
     def __eq__(self, other: TaskList) -> bool:

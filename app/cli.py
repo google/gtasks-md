@@ -133,7 +133,7 @@ def rollback(service: GoogleApiService, backup: Backup):
 
 
 def fetch_task_lists(service: GoogleApiService):
-    task_lists = asyncio.run(service.fetch_task_lists())
+    task_lists = service.fetch_task_lists()
     return task_lists, task_lists_to_markdown(task_lists)
 
 

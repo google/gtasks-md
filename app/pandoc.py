@@ -95,7 +95,7 @@ def markdown_to_task_lists(text: str) -> list[TaskList]:
             case Header(1, _, _):
                 return parse_task_lists(items, idx + 1)
             case Header(2, _, hd):
-                task_list = TaskList(pandoc.write(hd).strip(), "", [])
+                task_list = TaskList("", pandoc.write(hd).strip(), [])
 
                 if idx + 1 < len(items):
                     match items[idx + 1]:
@@ -150,7 +150,7 @@ def markdown_to_task_lists(text: str) -> list[TaskList]:
             case _:
                 note = pandoc.write(Pandoc(Meta({}), task[1:]), options=["--wrap=none"])
 
-        return Task(name, "", note.strip(), taskNo, status, subtasks)
+        return Task("", name, note.strip(), taskNo, status, subtasks)
 
     match pandoc.read(text):
         case Pandoc(_, items):
