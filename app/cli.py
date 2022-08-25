@@ -6,6 +6,7 @@ import os
 import pandoc
 from xdg import xdg_cache_home, xdg_config_home
 
+from .backup import Backup
 from .editor import Editor
 from .googleapi import GoogleApiService
 from .pandoc import (pandoc_to_string, pandoc_to_task_lists,
@@ -34,11 +35,17 @@ def main():
             auth(service, args.credentials_file)
         case "edit":
             service = GoogleApiService(args.user)
-            editor = Editor(args.editor, args.user)
-            edit(service, editor)
+            editor = Editor(args.editor)
+            backup = Backup(args.user)
+            edit(service, editor, backup)
         case "reconcile":
             service = GoogleApiService(args.user)
-            reconcile(service, args.file_path)
+            backup = Backup(args.user)
+            reconcile(service, args.file_path, backup)
+        case "rollback":
+            service = GoogleApiService(args.user)
+            backup = Backup(args.user)
+            rollback(service, backup)
         case "view":
             service = GoogleApiService(args.user)
             view(service)
@@ -66,6 +73,7 @@ def parse_args():
         type=str,
     )
 
+    subparsers.add_parser("rollback", help="Rollback last change.")
     subparsers.add_parser("view", help="View Google Tasks.")
 
     edit_parser = subparsers.add_parser("edit", help="Edit Google Tasks.")
@@ -99,19 +107,31 @@ def view(service: GoogleApiService):
     print(text)
 
 
-def edit(service: GoogleApiService, editor: Editor):
+def edit(service: GoogleApiService, editor: Editor, backup: Backup):
     old_task_lists, old_text = fetch_task_lists(service)
     new_text = editor.edit(old_text)
     new_task_lists = pandoc_to_task_lists(pandoc.read(new_text))
+    backup.write_backup(old_text)
     asyncio.run(service.reconcile(old_task_lists, new_task_lists))
 
 
-def reconcile(service: GoogleApiService, file_path: str):
-    old_task_lists, _ = fetch_task_lists(service)
+def reconcile(service: GoogleApiService, file_path: str, backup: Backup | None = None):
+    old_task_lists, old_text = fetch_task_lists(service)
+
     with open(file_path, "r") as source:
         new_text = source.read()
         new_task_lists = pandoc_to_task_lists(pandoc.read(new_text))
+        if backup:
+            backup.write_backup(old_text)
         asyncio.run(service.reconcile(old_task_lists, new_task_lists))
+
+
+def rollback(service: GoogleApiService, backup: Backup):
+    backup_file = backup.discard_backup()
+    if backup_file:
+        reconcile(service, backup_file, None)
+    else:
+        print("No backup found")
 
 
 def fetch_task_lists(service: GoogleApiService):
