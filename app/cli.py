@@ -3,14 +3,12 @@ import asyncio
 import logging
 import os
 
-import pandoc
 from xdg import xdg_cache_home, xdg_config_home
 
 from .backup import Backup
 from .editor import Editor
 from .googleapi import GoogleApiService
-from .pandoc import (pandoc_to_string, pandoc_to_task_lists,
-                     task_lists_to_pandoc)
+from .pandoc import markdown_to_task_lists, task_lists_to_markdown
 
 
 def main():
@@ -110,7 +108,7 @@ def view(service: GoogleApiService):
 def edit(service: GoogleApiService, editor: Editor, backup: Backup):
     old_task_lists, old_text = fetch_task_lists(service)
     new_text = editor.edit(old_text)
-    new_task_lists = pandoc_to_task_lists(pandoc.read(new_text))
+    new_task_lists = markdown_to_task_lists(new_text)
     backup.write_backup(old_text)
     asyncio.run(service.reconcile(old_task_lists, new_task_lists))
 
@@ -120,7 +118,7 @@ def reconcile(service: GoogleApiService, file_path: str, backup: Backup | None =
 
     with open(file_path, "r") as source:
         new_text = source.read()
-        new_task_lists = pandoc_to_task_lists(pandoc.read(new_text))
+        new_task_lists = markdown_to_task_lists(new_text)
         if backup:
             backup.write_backup(old_text)
         asyncio.run(service.reconcile(old_task_lists, new_task_lists))
@@ -136,8 +134,7 @@ def rollback(service: GoogleApiService, backup: Backup):
 
 def fetch_task_lists(service: GoogleApiService):
     task_lists = asyncio.run(service.fetch_task_lists())
-    doc = task_lists_to_pandoc(task_lists)
-    return task_lists, pandoc_to_string(doc)
+    return task_lists, task_lists_to_markdown(task_lists)
 
 
 if __name__ == "__main__":

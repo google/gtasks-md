@@ -19,8 +19,8 @@ Str = types.Str  # type: ignore
 ORDERED_FIRST_ELEM = (1, Decimal(), Period())
 
 
-def task_lists_to_pandoc(task_lists: list[TaskList]) -> Pandoc:
-    """Parses Task Lists to a Pandoc markdown representation"""
+def task_lists_to_markdown(task_lists: list[TaskList]) -> str:
+    """Parses Task Lists to a Pandoc markdown"""
 
     def task_list_header_to_pandoc(task_list: TaskList) -> Header:
         match pandoc.read(task_list.title):
@@ -48,12 +48,14 @@ def task_lists_to_pandoc(task_lists: list[TaskList]) -> Pandoc:
                 if use_para:
                     pandocTask.append(Para(title))
                     match pandoc.read(task.note):
-                        case Pandoc(_, [note]):
-                            pandocTask.append(note)
                         case Pandoc(_, []):
                             pass
+                        case Pandoc(_, [*note]):
+                            pandocTask += note
                         case _:
-                            raise SyntaxError(f"Could not parse Task note {task.note}")
+                            raise SyntaxError(
+                                f"Could not parse Task note:\n{task.note}"
+                            )
                 else:
                     pandocTask.append(Plain(title))
             case _:
@@ -79,11 +81,11 @@ def task_lists_to_pandoc(task_lists: list[TaskList]) -> Pandoc:
             OrderedList(ORDERED_FIRST_ELEM, tasks_to_pandoc(task_list.tasks))
         )
 
-    return Pandoc(Meta({}), content)
+    return pandoc.write(Pandoc(Meta({}), content))
 
 
-def pandoc_to_task_lists(doc: Pandoc) -> list[TaskList]:
-    """Parses Pandoc markdown representation to Task Lists"""
+def markdown_to_task_lists(text: str) -> list[TaskList]:
+    """Parses Pandoc markdown to Task Lists"""
 
     def parse_task_lists(items, idx):
         if idx >= len(items):
@@ -138,27 +140,20 @@ def pandoc_to_task_lists(doc: Pandoc) -> list[TaskList]:
                 raise SyntaxError(f"Expected Task status and title, got {task[0]}")
 
         note = ""
-        for item in task[1:]:
-            match item:
-                case OrderedList(_, _):
-                    break
-                case _:
-                    note += pandoc.write(Pandoc(Meta({}), [item]))
-
-        parsed_task = Task(name, "", note, taskNo, status, [])
-
+        subtasks = []
         match task[-1]:
             case OrderedList(_, subtasks):
-                parsed_task.subtasks = parse_tasks(subtasks)
+                note = pandoc.write(
+                    Pandoc(Meta({}), task[1:-1]), options=["--wrap=none"]
+                )
+                subtasks = parse_tasks(subtasks)
+            case _:
+                note = pandoc.write(Pandoc(Meta({}), task[1:]), options=["--wrap=none"])
 
-        return parsed_task
+        return Task(name, "", note.strip(), taskNo, status, subtasks)
 
-    match doc:
+    match pandoc.read(text):
         case Pandoc(_, items):
             return parse_task_lists(items, 0)
         case _:
             raise SyntaxError("Expected Pandoc markdown representation.")
-
-
-def pandoc_to_string(doc: Pandoc) -> str:
-    return pandoc.write(doc)
