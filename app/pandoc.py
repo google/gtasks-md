@@ -85,7 +85,7 @@ def task_lists_to_markdown(task_lists: list[TaskList]) -> str:
         return pandocTask
 
     content = [
-        Header(1, ("todo", [], []), [Str("Google"), Space(), Str("Tasks")]),
+        Header(1, ("", [], []), [Str("Google"), Space(), Str("Tasks")]),
     ]
 
     for task_list in task_lists:
