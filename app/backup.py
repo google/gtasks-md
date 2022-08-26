@@ -18,7 +18,7 @@ class Backup:
         marker_file_path.touch()
         with marker_file_path.open("r+") as marker_file:
             marker = marker_file.read()
-            file_no = ((int(marker) if marker else 0) + 1) % 10
+            file_no = (int(marker) + 1 if marker else 0) % 10
             marker_file.seek(0)
             marker_file.write(str(file_no))
             marker_file.truncate()
@@ -35,9 +35,9 @@ class Backup:
 
         with marker_file_path.open("r+") as marker_file:
             marker = marker_file.read()
-            file_no = ((int(marker) if marker else 0) - 1) % 10
+            file_no = ((int(marker) if marker else 0)) % 10
             marker_file.seek(0)
-            marker_file.write(str(file_no))
+            marker_file.write(str(file_no - 1))
             marker_file.truncate()
 
             return f"{cache_dir}/{file_no}.bak.md"
