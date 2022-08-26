@@ -3,7 +3,7 @@ import asyncio
 import logging
 import os
 
-from xdg import xdg_cache_home, xdg_config_home
+from xdg import xdg_cache_home, xdg_data_home
 
 from .backup import Backup
 from .editor import Editor
@@ -14,7 +14,7 @@ from .pandoc import markdown_to_task_lists, task_lists_to_markdown
 def main():
     args = parse_args()
 
-    config_dir = f"{xdg_config_home()}/gtasks-md/{args.user}/"
+    config_dir = f"{xdg_data_home()}/gtasks-md/{args.user}/"
     os.makedirs(os.path.dirname(config_dir), exist_ok=True)
     cache_dir = f"{xdg_cache_home()}/gtasks-md/{args.user}/"
     os.makedirs(os.path.dirname(cache_dir), exist_ok=True)
