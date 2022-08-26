@@ -1,4 +1,4 @@
-# Design (draft)
+# Design (first draft, not updated)
 
 I want to have a tool that allows me to keep my Google Tasks as a markdown file.
 The first version (PoC) should allow me to view this file. The second version
