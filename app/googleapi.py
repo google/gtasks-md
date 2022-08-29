@@ -15,7 +15,7 @@ import asyncio
 import logging
 import os
 from collections import defaultdict
-from datetime import datetime, timedelta, timezone
+from datetime import datetime
 from enum import Enum, auto
 
 from google.auth.transport.requests import Request
@@ -32,8 +32,17 @@ SCOPES = ["https://www.googleapis.com/auth/tasks"]
 
 # https://googleapis.github.io/google-api-python-client/docs/dyn/tasks_v1.html
 class GoogleApiService:
-    def __init__(self, user):
+    def __init__(
+        self,
+        user: str,
+        completed_after: datetime | None,
+        completed_before: datetime | None,
+        task_status: TaskStatus,
+    ):
         self.user = user
+        self.completed_after = completed_after
+        self.completed_before = completed_before
+        self.task_status = TaskStatus(task_status) if task_status else None
         self._service = None
 
     def tasks(self):
@@ -105,10 +114,12 @@ class GoogleApiService:
                 task_list_id,
             )
             # Skip fixing task order for completed tasks
-            completed_updated_tasks = filter(lambda t: not t.completed(), updated_tasks)
+            incompleted_updated_tasks = filter(
+                lambda t: not t.completed(), updated_tasks
+            )
             fix_task_order(
                 task_list_id,
-                list(completed_updated_tasks),
+                list(incompleted_updated_tasks),
                 parent_task_id,
             )
             return updated_tasks
@@ -240,15 +251,16 @@ class GoogleApiService:
 
         def create_request_with_callback(task_list_id, completed):
             def fetch_tasks_request(task_list_id, completed, next_page_token=""):
+                completed_max = ""
                 completed_min = ""
                 if completed:
-                    completed_min = (
-                        (datetime.now(timezone.utc) - timedelta(days=30))
-                        .astimezone()
-                        .isoformat()
-                    )
+                    if self.completed_before:
+                        completed_max = self.completed_before.isoformat()
+                    if self.completed_after:
+                        completed_min = self.completed_after.isoformat()
 
                 return self.tasks().list(
+                    completedMax=completed_max,
                     completedMin=completed_min,
                     maxResults=100,
                     pageToken=next_page_token,
@@ -301,8 +313,10 @@ class GoogleApiService:
             id = task_list["id"]
             id_to_task_list[id] = TaskList(id, task_list["title"], [])
 
-            batched_request.add(*create_request_with_callback(id, False))
-            batched_request.add(*create_request_with_callback(id, True))
+            if not self.task_status or self.task_status == TaskStatus.PENDING:
+                batched_request.add(*create_request_with_callback(id, False))
+            if not self.task_status or self.task_status == TaskStatus.COMPLETED:
+                batched_request.add(*create_request_with_callback(id, True))
         batched_request.execute()
 
         task_lists = list(id_to_task_list.values())

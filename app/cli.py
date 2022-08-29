@@ -13,8 +13,10 @@
 # limitations under the License.
 import argparse
 import asyncio
+import datetime
 import logging
 import os
+from datetime import timedelta
 
 from xdg import xdg_cache_home, xdg_data_home
 
@@ -40,33 +42,55 @@ def main():
         datefmt="%Y-%m-%d %H:%M:%S",
     )
 
+    service = GoogleApiService(
+        args.user, args.completed_after, args.completed_before, args.status
+    )
     match args.subcommand:
         case "auth":
-            service = GoogleApiService(args.user)
             auth(service, args.credentials_file)
         case "edit":
-            service = GoogleApiService(args.user)
             editor = Editor(args.editor)
             backup = Backup(args.user)
             edit(service, editor, backup)
         case "reconcile":
-            service = GoogleApiService(args.user)
             backup = Backup(args.user)
             reconcile(service, args.file_path, backup)
         case "rollback":
-            service = GoogleApiService(args.user)
             backup = Backup(args.user)
             rollback(service, backup)
         case "view":
-            service = GoogleApiService(args.user)
             view(service)
         case None:
             print("Please run one of the subcommands.")
 
 
 def parse_args():
+    def parse_date(date):
+        return datetime.datetime.strptime(date, "%Y-%m-%d").astimezone()
+
     # https://stackoverflow.com/a/49977713
     parser = argparse.ArgumentParser(description="Google Tasks declarative management.")
+    parser.add_argument(
+        "--completed-after",
+        dest="completed_after",
+        default=(datetime.datetime.now() - timedelta(days=7)).astimezone(),
+        help="Only show tasks completed after given date. The date must be in format YYYY-MM-DD. Defaults to one week ago.",
+        type=parse_date,
+    )
+    parser.add_argument(
+        "--completed-before",
+        dest="completed_before",
+        default=None,
+        help="Only show tasks completed before given date. The date must be in format YYYY-MM-DD.",
+        type=lambda d: parse_date(d) if d else None,
+    )
+    parser.add_argument(
+        "--status",
+        dest="status",
+        default="",
+        help="Task status. One of: needsAction, completed.",
+        type=str.lower,
+    )
     parser.add_argument(
         "--user",
         dest="user",
@@ -83,9 +107,6 @@ def parse_args():
         help="Location of credential file.",
         type=str,
     )
-
-    subparsers.add_parser("rollback", help="Rollback last change.")
-    subparsers.add_parser("view", help="View Google Tasks.")
 
     edit_parser = subparsers.add_parser("edit", help="Edit Google Tasks.")
     edit_parser.add_argument(
@@ -104,6 +125,9 @@ def parse_args():
         help="Location of the source file.",
         type=str,
     )
+
+    subparsers.add_parser("rollback", help="Rollback last change.")
+    subparsers.add_parser("view", help="View Google Tasks.")
 
     return parser.parse_args()
 
