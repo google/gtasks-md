@@ -320,6 +320,7 @@ class GoogleApiService:
         batched_request.execute()
 
         task_lists = list(id_to_task_list.values())
+        task_lists.sort(key=lambda tl: tl.title)
         for task_list in task_lists:
             for task in task_list.tasks:
                 task.subtasks = task_id_to_subtasks.get(task.id, [])
