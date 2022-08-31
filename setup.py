@@ -24,5 +24,4 @@ setup(
     entry_points={"console_scripts": ["gtasks-md=app.cli:main"]},
     python_requires=">=3.10",
     include_package_data=True,
-    setup_requires=['pytest-runner']
 )
