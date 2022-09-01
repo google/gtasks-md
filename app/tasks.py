@@ -51,15 +51,11 @@ class Task:
         return self.status == TaskStatus.COMPLETED
 
     def toRequest(self) -> dict[str, str]:
-        status = "needsAction"
-        if self.status == TaskStatus.COMPLETED:
-            status = "completed"
-
         return {
             "id": self.id,
             "kind": "tasks#task",
             "notes": self.note,
-            "status": status,
+            "status": self.status.value,
             "title": self.title,
         }
 

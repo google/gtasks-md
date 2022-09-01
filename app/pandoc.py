@@ -37,8 +37,8 @@ def task_lists_to_markdown(task_lists: list[TaskList]) -> str:
 
     def task_list_header_to_pandoc(task_list: TaskList) -> Header:
         match pandoc.read(task_list.title):
-            case Pandoc(_, [Para(name)]):
-                return Header(2, ("", [], []), name)
+            case Pandoc(_, [Para(title)]):
+                return Header(2, ("", [], []), title)
             case _:
                 raise SyntaxError(f"Could not parse Task List title {task_list.title}")
 
