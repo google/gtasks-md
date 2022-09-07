@@ -1,6 +1,7 @@
 # gtasks-md
 
-[Google Tasks] is a Google Workspace tool that has the following advantages:
+[Google Tasks](https://mail.google.com/tasks/canvas) is a Google Workspace tool
+that has the following advantages:
 
 -   It has great integration with Google Calendar.
 -   There are mobile apps developed by Google for Android and iOS.
@@ -15,7 +16,7 @@ The idea that this project represents is declarative approach to task
 management. It provides an interface for manipulating Google Tasks via
 Markdown[^1]. See the following demo:
 
-![Application demo]
+![Application demo](./docs/demo.gif)
 
 ## Supported operations
 
@@ -30,11 +31,13 @@ gtasks-md auth ./credentials.json
 In order to run gtasks-md it is needed first to obtain API credentials. This can
 be achieved with the following steps[^2]:
 
-1.  Create a new project in [GCP] and go to [Google APIs].
+1.  Create a new project in [GCP](https://cloud.google.com/) and go to [Google
+    APIs](https://console.developers.google.com/apis/).
 
 2.  Click `ENABLE APIS AND SERVICES` add `Google Tasks API`.
 
-3.  Go to [Google APIs] and click `OAuth consent screen` from the sidebar.
+3.  Go to [Google APIs](https://console.developers.google.com/apis/) and click
+    `OAuth consent screen` from the sidebar.
 
     -   Choose `External` (Available to any user with a Google Account.) and
         click `CREATE`.
@@ -50,8 +53,9 @@ be achieved with the following steps[^2]:
     -   Download the credentials as `JSON` file.
     -   Run `gtasks-md auth` command with that file as argument.
 
-In case of troubles consult [OAuth client ID credentials] creation documentation
-for a Desktop app.
+In case of troubles consult [OAuth client ID
+credentials](https://developers.google.com/workspace/guides/create-credentials#oauth-client-id)
+creation documentation for a Desktop app.
 
 ### view
 
@@ -104,14 +108,8 @@ gtasks-md rollback
 Rolls back the server state to the most recent locally backuped state. Useful if
 something goes wrong.
 
-[^1]: Subset of [Pandoc's Markdown] to be exact
+[^1]: Subset of [Pandoc's
+    Markdown](https://pandoc.org/MANUAL.html#pandocs-markdown) to be exact
 
-[^2]: Shamelessly stolen from [calendar.vim]
-
-  [Google Tasks]: https://mail.google.com/tasks/canvas
-  [Application demo]: ./docs/demo.gif
-  [GCP]: https://cloud.google.com/
-  [Google APIs]: https://console.developers.google.com/apis/
-  [OAuth client ID credentials]: https://developers.google.com/workspace/guides/create-credentials#oauth-client-id
-  [Pandoc's Markdown]: https://pandoc.org/MANUAL.html#pandocs-markdown
-  [calendar.vim]: https://github.com/itchyny/calendar.vim#important-notice
+[^2]: Shamelessly stolen from
+    [calendar.vim](https://github.com/itchyny/calendar.vim#important-notice)
