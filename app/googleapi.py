@@ -113,13 +113,22 @@ class GoogleApiService:
                 new_tasks,
                 task_list_id,
             )
-            # Skip fixing task order for completed tasks
-            incompleted_updated_tasks = filter(
-                lambda t: not t.completed(), updated_tasks
+
+            completed_tasks = []
+            incompleted_tasks = []
+            for task in updated_tasks:
+                if task.completed():
+                    completed_tasks.append(task)
+                else:
+                    incompleted_tasks.append(task)
+            fix_task_order(
+                task_list_id,
+                list(incompleted_tasks),
+                parent_task_id,
             )
             fix_task_order(
                 task_list_id,
-                list(incompleted_updated_tasks),
+                list(completed_tasks),
                 parent_task_id,
             )
             return updated_tasks
