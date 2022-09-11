@@ -108,10 +108,30 @@ gtasks-md rollback
 Rolls back the server state to the most recent locally backuped state. Useful if
 something goes wrong.
 
-## Setup
+## Installation
 
-Until the first release is cut the suggested way to run the tool is via the
-`runner.py` script. The setup may be done with the following steps:
+1.  Install binary dependencies
+
+    ``` sh
+    # Ubuntu
+    $ sudo apt install pandoc pip
+    # Fedora
+    $ sudo dnf install pandoc pip
+    ```
+
+2.  Install the [PyPI package](https://pypi.org/project/gtasks-md)
+
+    ``` sh
+    pip install gtasks-md
+    ```
+
+3.  Run `gtasks-md`
+
+    ``` sh
+    gtasks-md --help
+    ```
+
+## Development
 
 ### Ubuntu
 
@@ -127,8 +147,10 @@ $ ./runner.py --help
 ### NixOS (or when using Nix)
 
 ``` sh
-nix-shell
-./runner.py --help
+# 1. Enter nix-shell (this may be done automatically when using direnv)
+$ nix-shell
+# 2. Run the runner.py
+$ ./runner.py --help
 ```
 
 [^1]: Subset of [Pandoc's
