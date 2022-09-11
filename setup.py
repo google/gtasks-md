@@ -12,16 +12,32 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from setuptools import find_packages, setup
+from os import path
+
+from setuptools import setup
+
+here = path.abspath(path.dirname(__file__))
+with open(path.join(here, "README.md"), encoding="utf-8") as f:
+    long_description = f.read()
 
 setup(
     name="gtasks-md",
-    version="0.0.1",
-    description="A tool to manage Google Tasks using a markdown document.",
     author="Michal Kielbowicz",
     author_email="gtasks-md@kielbowi.cz",
-    packages=["app"] + find_packages(),
-    entry_points={"console_scripts": ["gtasks-md=app.cli:main"]},
+    url="https://github.com/google/gtasks-md",
+    description="A tool to manage Google Tasks using a markdown document.",
+    long_description=long_description,
+    long_description_content_type="text/markdown",
     python_requires=">=3.10",
-    include_package_data=True,
+    install_requires=[
+        "google-api-python-client",
+        "google-auth-httplib2",
+        "google-auth-oauthlib",
+        "pandoc",
+        "xdg",
+    ],
+    entry_points={"console_scripts": ["gtasks-md=app.cli:main"]},
+    packages=["app"],
+    version="0.0.1",
+    license="Apache License 2.0",
 )
