@@ -1,4 +1,4 @@
-name: Tests, linters and formatter
+name: Tests and formatters
 on:
 - push
 jobs:
