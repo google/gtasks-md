@@ -61,16 +61,18 @@ def task_lists_to_markdown(task_lists: list[TaskList]) -> str:
                 if use_para:
                     pandocTask.append(Para(title))
                     match pandoc.read(task.note):
-                        case Pandoc(_, []):
-                            pass
                         case Pandoc(_, [*note]):
                             pandocTask += note
+                        case Pandoc(_, []):
+                            pass
                         case _:
                             raise SyntaxError(
                                 f"Could not parse Task note:\n{task.note}"
                             )
                 else:
                     pandocTask.append(Plain(title))
+            case Pandoc(_, []):
+                pass
             case _:
                 raise SyntaxError(f"Could not parse Task title {task.title}")
 
