@@ -6,9 +6,9 @@ let
     propagatedBuildInputs = [ plumbum ply ];
     src                   = fetchPypi {
       inherit pname version;
-      sha256 = "sha256-0GPuJS8nYQEPFs86FJEq2SRRh8JMVvSxrZaW4QT+bh4=";
+      sha256 = "sha256-53LCxthxFGiUV5go268e/VOOtk/H5x1KazoRoYuu+Q0=";
     };
-    version               = "2.2";
+    version               = "2.3";
   };
   pythonWithPackages = pkgs.python3.withPackages (p: with p; [
     google-api-python-client
