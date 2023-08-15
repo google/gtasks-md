@@ -89,7 +89,7 @@ def parse_args():
         dest="status",
         default="",
         help="Task status. One of: needsAction, completed.",
-        type=str.lower,
+        type=str,
     )
     parser.add_argument(
         "--user",
