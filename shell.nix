@@ -6,9 +6,9 @@ let
     propagatedBuildInputs = [ plumbum ply ];
     src                   = fetchPypi {
       inherit pname version;
-      sha256 = "sha256-53LCxthxFGiUV5go268e/VOOtk/H5x1KazoRoYuu+Q0=";
+      sha256 = "sha256-LfsXvAVGkHbJfB20wIqFIKP3awhuJuMtAf5OQIryroc=";
     };
-    version               = "2.3";
+    version               = "2.4b0";
   };
   pythonWithPackages = pkgs.python3.withPackages (p: with p; [
     google-api-python-client
@@ -18,7 +18,7 @@ let
     xdg
   ]);
 in pkgs.mkShell {
-  buildInputs = with pkgs; [ black pandoc pythonWithPackages ];
+  buildInputs = with pkgs; [ pandoc pythonWithPackages ];
   shellHook   = ''
     PYTHONPATH=${pythonWithPackages}/${pythonWithPackages.sitePackages}
   '';

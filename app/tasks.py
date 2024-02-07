@@ -14,13 +14,20 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 
 
-class TaskStatus(Enum):
+class TaskStatus(StrEnum):
     UNKNOWN = "unknown"
     PENDING = "needsAction"
     COMPLETED = "completed"
+
+    @classmethod
+    def _missing_(cls, value: str):
+        for member in cls:
+            if member.value.casefold() == value.casefold():
+                return member
+        return None
 
 
 # https://developers.google.com/tasks/reference/rest/v1/tasks

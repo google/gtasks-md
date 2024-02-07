@@ -28,7 +28,7 @@ setup(
     description="A tool to manage Google Tasks using a markdown document.",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    python_requires=">=3.10",
+    python_requires=">=3.11",
     install_requires=[
         "google-api-python-client",
         "google-auth-httplib2",
@@ -38,6 +38,6 @@ setup(
     ],
     entry_points={"console_scripts": ["gtasks-md=app.cli:main"]},
     packages=["app"],
-    version="0.0.3",
+    version="0.0.4",
     license="Apache License 2.0",
 )
