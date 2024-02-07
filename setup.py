@@ -38,6 +38,6 @@ setup(
     ],
     entry_points={"console_scripts": ["gtasks-md=app.cli:main"]},
     packages=["app"],
-    version="0.0.3",
+    version="0.0.4",
     license="Apache License 2.0",
 )
