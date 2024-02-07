@@ -18,7 +18,7 @@ let
     xdg
   ]);
 in pkgs.mkShell {
-  buildInputs = with pkgs; [ pandoc pythonWithPackages ];
+  buildInputs = with pkgs; [ black pandoc pythonWithPackages ];
   shellHook   = ''
     PYTHONPATH=${pythonWithPackages}/${pythonWithPackages.sitePackages}
   '';
