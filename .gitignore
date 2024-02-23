@@ -1,5 +1,5 @@
-.direnv/
-.idea/
+/.direnv
+/.idea
 
 __pycache__/
 __build__/
