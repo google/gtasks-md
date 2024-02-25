@@ -383,7 +383,13 @@ class GoogleApiService:
 
     def _get_service(self):
         if not self._service:
-            self._service = build("tasks", "v1", credentials=self.get_credentials())
+            self._service = build(
+                "tasks",
+                "v1",
+                credentials=self.get_credentials(),
+                cache_discovery=False,
+                static_discovery=True,
+            )
         return self._service
 
 
