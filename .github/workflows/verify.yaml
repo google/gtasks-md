@@ -9,8 +9,8 @@ jobs:
     - uses: cachix/install-nix-action@v17
       with:
         nix_path: nixpkgs=channel:nixos-unstable
-    - run: nix-shell --run "python -m unittest"
-    - run: nix-shell --run "black --check ."
+    - run: nix develop -c python -m unittest
+    - run: nix develop -c ruff check .
   readme-test:
     runs-on: ubuntu-latest
     steps:
