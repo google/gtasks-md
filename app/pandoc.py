@@ -138,7 +138,6 @@ def markdown_to_task_lists(text: str) -> list[TaskList]:
         status = TaskStatus.UNKNOWN
         match task[0]:
             case Plain(txt) | Para(txt):
-                print(txt)
                 status = match_status(txt[0])
                 if status == TaskStatus.UNKNOWN:
                     name = pandoc.write(Plain(txt))
