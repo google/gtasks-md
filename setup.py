@@ -36,8 +36,8 @@ setup(
         "pandoc",
         "xdg",
     ],
-    entry_points={"console_scripts": ["gtasks-md=app.cli:main"]},
+    entry_points={"console_scripts": ["gtasks-md=app.__main__:main"]},
     packages=["app"],
-    version="0.0.8",
+    version="0.0.9",
     license="Apache License 2.0",
 )
