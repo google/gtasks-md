@@ -36,10 +36,10 @@ ORDERED_FIRST_ELEM = (1, Decimal(), Period())
 def task_lists_to_markdown(task_lists: list[TaskList]) -> str:
     """Parses Task Lists to a Pandoc markdown"""
 
-    def str_to_pandoc(str: str):
+    def text_to_pandoc(text: str):
         elems = []
-        for s in str.split():
-            elems.append(Str(s))
+        for word in text.split():
+            elems.append(Str(word))
             elems.append(Space())
         return elems[:-1]
 
@@ -54,7 +54,7 @@ def task_lists_to_markdown(task_lists: list[TaskList]) -> str:
         pandocTask = []
 
         task_sign = "☒" if task.completed() else "☐"
-        task_title = [Str(task_sign), Space()] + str_to_pandoc(task.title)
+        task_title = [Str(task_sign), Space()] + text_to_pandoc(task.title)
 
         if parent_contains_notes:
             pandocTask.append(Para(task_title))
@@ -83,7 +83,7 @@ def task_lists_to_markdown(task_lists: list[TaskList]) -> str:
     ]
 
     for task_list in task_lists:
-        content.append(Header(2, EMPTY_ATTRS, str_to_pandoc(task_list.title)))
+        content.append(Header(2, EMPTY_ATTRS, text_to_pandoc(task_list.title)))
         content.append(
             OrderedList(ORDERED_FIRST_ELEM, tasks_to_pandoc(task_list.tasks))
         )
