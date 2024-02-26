@@ -29,69 +29,61 @@ SoftBreak = types.SoftBreak  # type: ignore
 Space = types.Space  # type: ignore
 Str = types.Str  # type: ignore
 
+EMPTY_ATTRS = ("", [], [])
 ORDERED_FIRST_ELEM = (1, Decimal(), Period())
 
 
 def task_lists_to_markdown(task_lists: list[TaskList]) -> str:
     """Parses Task Lists to a Pandoc markdown"""
 
-    def task_list_header_to_pandoc(task_list: TaskList) -> Header:
-        match pandoc.read(task_list.title):
-            case Pandoc(_, [Para(title)]):
-                return Header(2, ("", [], []), title)
-            case _:
-                raise SyntaxError(f"Could not parse Task List title {task_list.title}")
+    def str_to_pandoc(str: str):
+        elems = []
+        for s in str.split():
+            elems.append(Str(s))
+            elems.append(Space())
+        return elems[:-1]
 
     def tasks_to_pandoc(tasks: list[Task]):
         pandoc_tasks = []
         has_notes = any(t.note for t in tasks)
         for task in tasks:
             pandoc_tasks.append(task_to_pandoc(task, has_notes))
-
         return pandoc_tasks
 
-    def task_to_pandoc(task: Task, use_para: bool):
+    def task_to_pandoc(task: Task, parent_contains_notes: bool):
         pandocTask = []
 
-        match pandoc.read(task.title):
-            case Pandoc(_, [Para(name)]):
-                sign = "☒" if task.completed() else "☐"
-                title = [Str(sign), Space()] + name
+        task_sign = "☒" if task.completed() else "☐"
+        task_title = [Str(task_sign), Space()] + str_to_pandoc(task.title)
 
-                if use_para:
-                    pandocTask.append(Para(title))
-                    match pandoc.read(task.note):
-                        case Pandoc(_, [*note]):
-                            pandocTask += note
-                        case Pandoc(_, []):
-                            pass
-                        case _:
-                            raise SyntaxError(
-                                f"Could not parse Task note:\n{task.note}"
-                            )
-                else:
-                    pandocTask.append(Plain(title))
-            case Pandoc(_, []):
-                pass
-            case _:
-                raise SyntaxError(f"Could not parse Task title {task.title}")
+        if parent_contains_notes:
+            pandocTask.append(Para(task_title))
+            match pandoc.read(task.note):
+                case Pandoc(_, [*note]):
+                    pandocTask += note
+                case Pandoc(_, []):
+                    pass
+                case _:
+                    raise SyntaxError(f"Could not parse Task note:\n{task.note}")
+        else:
+            pandocTask.append(Plain(task_title))
 
         if task.subtasks:
             subtasks = []
-            has_notes = any(st.note for st in task.subtasks)
+            parent_contains_notes = any(st.note for st in task.subtasks)
             for subtask in task.subtasks:
-                subtasks.append(task_to_pandoc(subtask, has_notes))
+                subtasks.append(task_to_pandoc(subtask, parent_contains_notes))
 
             pandocTask.append(OrderedList(ORDERED_FIRST_ELEM, subtasks))
 
         return pandocTask
 
     content = [
-        Header(1, ("", [], []), [Str("Google"), Space(), Str("Tasks")]),
+        Header(1, EMPTY_ATTRS, [Str("Google"), Space(), Str("Tasks")]),
     ]
 
     for task_list in task_lists:
-        content.append(task_list_header_to_pandoc(task_list))
+        content.append(Header(2, EMPTY_ATTRS, str_to_pandoc(task_list.title)))
         content.append(
             OrderedList(ORDERED_FIRST_ELEM, tasks_to_pandoc(task_list.tasks))
         )
