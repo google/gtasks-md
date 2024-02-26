@@ -140,17 +140,18 @@ def markdown_to_task_lists(text: str) -> list[TaskList]:
                 case Str("☒"):
                     return TaskStatus.COMPLETED
                 case _:
-                    raise SyntaxError(f"Expected status checkbox, got: ${str}")
+                    return TaskStatus.UNKNOWN
 
         name = ""
         status = TaskStatus.UNKNOWN
         match task[0]:
-            case Plain(txt):
+            case Plain(txt) | Para(txt):
+                print(txt)
                 status = match_status(txt[0])
-                name = pandoc.write(Plain(txt[2:])).strip()
-            case Para(txt):
-                status = match_status(txt[0])
-                name = pandoc.write(Plain(txt[2:])).strip()
+                if status == TaskStatus.UNKNOWN:
+                    name = pandoc.write(Plain(txt))
+                else:
+                    name = pandoc.write(Plain(txt[2:]))
             case _:
                 raise SyntaxError(f"Expected Task status and title, got {task[0]}")
 
@@ -165,7 +166,7 @@ def markdown_to_task_lists(text: str) -> list[TaskList]:
             case _:
                 note = pandoc.write(Pandoc(Meta({}), task[1:]), options=["--wrap=none"])
 
-        return Task("", name, note.strip(), taskNo, status, subtasks)
+        return Task("", name.strip(), note.strip(), taskNo, status, subtasks)
 
     match pandoc.read(text):
         case Pandoc(_, items):
