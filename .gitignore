@@ -6,3 +6,5 @@ __build__/
 
 /dist/
 /gtasks_md.egg-info/
+
+/build/
