@@ -39,6 +39,6 @@ setup(
     ],
     entry_points={"console_scripts": ["gtasks-md=app.__main__:main"]},
     packages=["app"],
-    version="0.0.9",
+    version="0.0.10",
     license="Apache License 2.0",
 )
