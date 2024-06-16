@@ -3,11 +3,11 @@
 [Google Tasks](https://mail.google.com/tasks/canvas) is a Google Workspace tool
 that has the following advantages:
 
--   It has great integration with Google Calendar.
--   There are mobile apps developed by Google for Android and iOS.
--   It is pretty straightforward to use, there is no feature creep.
+- It has a great integration with Google Calendar.
+- There are mobile apps developed by Google for Android and iOS.
+- It is pretty straightforward to use, there is no feature creep.
 
-All great, this works pretty well for shopping groceries or something, but what
+All good, this works pretty well for shopping groceries or something, but what
 if it was to be suitable for tracking more advanced tasks (e.g. work related)?
 It is possible to add some text as note to a task but this is very limited and
 not very convenient to use on desktop computer.
@@ -39,19 +39,19 @@ be achieved with the following steps[^2]:
 3.  Go to [Google APIs](https://console.developers.google.com/apis/) and click
     `OAuth consent screen` from the sidebar.
 
-    -   Choose `External` (Available to any user with a Google Account.) and
-        click `CREATE`.
-    -   Input your favorite name to `Application name`. In the
-        `Scopes for Google APIs` section, click `Add scope` and add
-        `Task API ../auth/tasks`.
-    -   Click `Save` (DO NOT `Submit for verification`).
+    - Choose `External` (Available to any user with a Google Account.) and click
+      `CREATE`.
+    - Input your favorite name to `Application name`. In the
+      `Scopes for Google APIs` section, click `Add scope` and add
+      `Task API ../auth/tasks`.
+    - Click `Save` (DO NOT `Submit for verification`).
 
 4.  Go to the `Credentials` page from the sidebar.
 
-    -   Create a new `OAuth client ID`. Select `Desktop application` for the
-        application type.
-    -   Download the credentials as `JSON` file.
-    -   Run `gtasks-md auth` command with that file as argument.
+    - Create a new `OAuth client ID`. Select `Desktop application` for the
+      application type.
+    - Download the credentials as `JSON` file.
+    - Run `gtasks-md auth` command with that file as argument.
 
 In case of troubles consult [OAuth client ID
 credentials](https://developers.google.com/workspace/guides/create-credentials#oauth-client-id)
