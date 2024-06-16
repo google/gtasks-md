@@ -119,11 +119,20 @@ something goes wrong.
     $ sudo dnf install pandoc pip
     ```
 
-2.  Install the [PyPI package](https://pypi.org/project/gtasks-md)
+2.  Install the [PyPI package](https://pypi.org/project/gtasks-md) in any of the
+    following:
 
-    ``` sh
-    pip install gtasks-md
-    ```
+    - The global site-packages using `pip`:
+
+      ``` sh
+      pip install gtasks-md
+      ```
+
+    - An isolated environment (`venv`) using `pipx`:
+
+      ``` sh
+      pipx install gtasks-md
+      ```
 
 3.  Run `gtasks-md`
 

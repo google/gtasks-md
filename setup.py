@@ -30,6 +30,7 @@ setup(
     long_description_content_type="text/markdown",
     python_requires=">=3.11",
     install_requires=[
+        "setuptools",
         "google-api-python-client",
         "google-auth-httplib2",
         "google-auth-oauthlib",
