@@ -290,7 +290,7 @@ class GoogleApiService:
                 while next_page_token:
                     response = fetch_tasks_request(
                         task_list_id, completed, next_page_token
-                    )
+                    ).execute()
                     fetched_tasks += response.get("items", [])
                     next_page_token = response.get("nextPageToken", "")
 
