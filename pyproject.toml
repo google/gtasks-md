@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gtasks-md"
+version = "0.0.10"
+description = "A tool to manage Google Tasks using a markdown document."
+readme = "README.md"
+license = "Apache-2.0"
+requires-python = ">=3.11"
+authors = [
+    { name = "Michal Kielbowicz", email = "gtasks-md@kielbowi.cz" },
+]
+dependencies = [
+    "google-api-python-client",
+    "google-auth-httplib2",
+    "google-auth-oauthlib",
+    "pandoc",
+    "xdg",
+]
+
+[tool.setuptools]
+packages = ["app"]
+
+[project.urls]
+Homepage = "https://github.com/google/gtasks-md"
+
+[project.scripts]
+gtasks-md = "app.__main__:main"

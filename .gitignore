@@ -8,3 +8,5 @@ __build__/
 /gtasks_md.egg-info/
 
 /build/
+
+/result
