@@ -74,14 +74,16 @@ def parse_args():
         "--completed-after",
         dest="completed_after",
         default=(datetime.datetime.now() - timedelta(days=7)).astimezone(),
-        help="Only show tasks completed after given date. The date must be in format YYYY-MM-DD. Defaults to one week ago.",
+        help="Only show tasks completed after given date. "
+        "The date must be in format YYYY-MM-DD. Defaults to one week ago.",
         type=parse_date,
     )
     parser.add_argument(
         "--completed-before",
         dest="completed_before",
         default=None,
-        help="Only show tasks completed before given date. The date must be in format YYYY-MM-DD.",
+        help="Only show tasks completed before given date. "
+        "The date must be in format YYYY-MM-DD.",
         type=lambda d: parse_date(d) if d else None,
     )
     parser.add_argument(
@@ -95,7 +97,8 @@ def parse_args():
         "--user",
         dest="user",
         default="default",
-        help="Account for which the credentials are sourced. Should match desired Google account.",
+        help="Account for which the credentials are sourced. "
+        "Should match desired Google account.",
         type=str,
     )
 
@@ -113,7 +116,8 @@ def parse_args():
         "--editor",
         dest="editor",
         default="",
-        help="Editor to be used for editing tasks. Defaults to $EDITOR and then $VISUAL and then vim.",
+        help="Editor to be used for editing tasks. "
+        "Defaults to $EDITOR and then $VISUAL and then vim.",
         type=str,
     )
 

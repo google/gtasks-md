@@ -51,22 +51,22 @@ def task_lists_to_markdown(task_lists: list[TaskList]) -> str:
         return pandoc_tasks
 
     def task_to_pandoc(task: Task, parent_contains_notes: bool):
-        pandocTask = []
+        pandoc_task = []
 
         task_sign = "☒" if task.completed() else "☐"
         task_title = [Str(task_sign), Space()] + text_to_pandoc(task.title)
 
         if parent_contains_notes:
-            pandocTask.append(Para(task_title))
+            pandoc_task.append(Para(task_title))
             match pandoc.read(task.note):
                 case Pandoc(_, [*note]):
-                    pandocTask += note
+                    pandoc_task += note
                 case Pandoc(_, []):
                     pass
                 case _:
                     raise SyntaxError(f"Could not parse Task note:\n{task.note}")
         else:
-            pandocTask.append(Plain(task_title))
+            pandoc_task.append(Plain(task_title))
 
         if task.subtasks:
             subtasks = []
@@ -74,9 +74,9 @@ def task_lists_to_markdown(task_lists: list[TaskList]) -> str:
             for subtask in task.subtasks:
                 subtasks.append(task_to_pandoc(subtask, parent_contains_notes))
 
-            pandocTask.append(OrderedList(ORDERED_FIRST_ELEM, subtasks))
+            pandoc_task.append(OrderedList(ORDERED_FIRST_ELEM, subtasks))
 
-        return pandocTask
+        return pandoc_task
 
     content = [
         Header(1, EMPTY_ATTRS, [Str("Google"), Space(), Str("Tasks")]),
@@ -124,7 +124,7 @@ def markdown_to_task_lists(text: str) -> list[TaskList]:
 
         return parsed_tasks
 
-    def parse_task(task, taskNo):
+    def parse_task(task, task_no):
         def match_status(str: Str) -> TaskStatus:
             match str:
                 case Str("☐"):
@@ -157,7 +157,7 @@ def markdown_to_task_lists(text: str) -> list[TaskList]:
             case _:
                 note = pandoc.write(Pandoc(Meta({}), task[1:]), options=["--wrap=none"])
 
-        return Task("", name.strip(), note.strip(), taskNo, status, subtasks)
+        return Task("", name.strip(), note.strip(), task_no, status, subtasks)
 
     match pandoc.read(text):
         case Pandoc(_, items):

@@ -95,7 +95,7 @@ class GoogleApiService:
 
                 case (ReconcileOp.INSERT, task_list):
                     response = (
-                        self.task_lists().insert(body=task_list.toRequest()).execute()
+                        self.task_lists().insert(body=task_list.to_request()).execute()
                     )
                     reconcile_tasks(response["id"], [], task_list.tasks)
                     logging.info(f"Inserted Task List {task_list.title}")
@@ -186,7 +186,7 @@ class GoogleApiService:
                     case (ReconcileOp.INSERT, task, idx):
                         batched_request.add(
                             self.tasks().insert(
-                                tasklist=task_list_id, body=task.toRequest()
+                                tasklist=task_list_id, body=task.to_request()
                             ),
                             insert_callback(task, idx),
                         )
@@ -197,7 +197,7 @@ class GoogleApiService:
                                 self.tasks().patch(
                                     tasklist=task_list_id,
                                     task=old_task.id,
-                                    body=new_task.toRequest(),
+                                    body=new_task.to_request(),
                                 ),
                                 update_callback(old_task, new_task, idx),
                             )
@@ -237,9 +237,10 @@ class GoogleApiService:
                     previous=previous_task_id,
                 ).execute()
 
-                previous_task_title = previous_task.title if previous_task else "NONE"
+                prev_title = previous_task.title if previous_task else "NONE"
                 logging.info(
-                    f"Moved task {task.title} after {previous_task_title} (parent: {parent_task_id})"
+                    f"Moved task {task.title} after {prev_title}"
+                    f" (parent: {parent_task_id})"
                 )
 
         async_tasks = []
@@ -281,7 +282,8 @@ class GoogleApiService:
             def callback(_, response, exception):
                 if exception:
                     logging.error(
-                        f"Error on fetching Tasks from Task List {task_list_id}: {exception}"
+                        f"Error on fetching Tasks from "
+                        f"Task List {task_list_id}: {exception}"
                     )
                     return
 

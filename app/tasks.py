@@ -52,12 +52,15 @@ class Task:
         )
 
     def __str__(self) -> str:
-        return f"#{self.position}: {self.title} ({self.id}): {self.status}, {len(self.subtasks)} subtasks"
+        return (
+            f"#{self.position}: {self.title} ({self.id}): "
+            f"{self.status}, {len(self.subtasks)} subtasks"
+        )
 
     def completed(self) -> bool:
         return self.status == TaskStatus.COMPLETED
 
-    def toRequest(self) -> dict[str, str]:
+    def to_request(self) -> dict[str, str]:
         return {
             "id": self.id,
             "kind": "tasks#task",
@@ -86,7 +89,7 @@ class TaskList:
     def __str__(self) -> str:
         return f"{self.title} ({self.id}): {len(self.tasks)} tasks"
 
-    def toRequest(self) -> dict[str, str]:
+    def to_request(self) -> dict[str, str]:
         return {
             "id": self.id,
             "kind": "tasks#taskList",
