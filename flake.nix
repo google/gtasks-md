@@ -60,6 +60,27 @@
             ];
           };
 
+        checks = {
+          tests =
+            let
+              pythonEnv = python.withPackages (
+                project.renderers.withPackages {
+                  inherit python;
+                }
+              );
+            in
+            pkgs.runCommand "tests" { buildInputs = [ pythonEnv pkgs.pandoc ]; } ''
+              cd ${self}
+              python -m unittest discover -s tests
+              touch $out
+            '';
+
+          ruff = pkgs.runCommand "ruff" { buildInputs = [ pkgs.ruff ]; } ''
+            ruff check --no-cache ${self}
+            touch $out
+          '';
+        };
+
         packages = rec {
           default = gtasks-md;
 

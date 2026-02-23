@@ -26,5 +26,14 @@ packages = ["app"]
 [project.urls]
 Homepage = "https://github.com/google/gtasks-md"
 
+[project.optional-dependencies]
+dev = ["pytest"]
+
 [project.scripts]
 gtasks-md = "app.__main__:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff.lint]
+extend-select = ["I", "N"]
