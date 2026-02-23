@@ -147,19 +147,19 @@ something goes wrong.
 ``` sh
 # 1. Install binary dependencies
 $ sudo apt install pandoc pip
-# 2. Install Python dependencies
-$ pip install -r requirements.txt
-# 3. Run the runner.py
-$ ./runner.py --help
+# 2. Install the project
+$ pip install .
+# 3. Run gtasks-md
+$ gtasks-md --help
 ```
 
 ### NixOS (or when using Nix)
 
 ``` sh
-# 1. Enter nix-shell (this may be done automatically when using direnv)
-$ nix-shell
-# 2. Run the runner.py
-$ ./runner.py --help
+# 1. Enter dev shell (this may be done automatically when using direnv)
+$ nix develop
+# 2. Run gtasks-md
+$ gtasks-md --help
 ```
 
 [^1]: Subset of [Pandoc's
