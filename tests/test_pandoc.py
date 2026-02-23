@@ -1,8 +1,8 @@
 import unittest
 from inspect import cleandoc
 
-from .pandoc import markdown_to_task_lists, task_lists_to_markdown
-from .tasks import Task, TaskList, TaskStatus
+from app.pandoc import markdown_to_task_lists, task_lists_to_markdown
+from app.tasks import Task, TaskList, TaskStatus
 
 
 class TestPandocConversion(unittest.TestCase):
