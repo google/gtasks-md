@@ -15,8 +15,8 @@ import argparse
 import asyncio
 import datetime
 import logging
-import os
 from datetime import timedelta
+from pathlib import Path
 
 from xdg import xdg_cache_home, xdg_data_home
 
@@ -29,13 +29,13 @@ from .pandoc import markdown_to_task_lists, task_lists_to_markdown
 def main():
     args = parse_args()
 
-    config_dir = f"{xdg_data_home()}/gtasks-md/{args.user}/"
-    os.makedirs(os.path.dirname(config_dir), exist_ok=True)
-    cache_dir = f"{xdg_cache_home()}/gtasks-md/{args.user}/"
-    os.makedirs(os.path.dirname(cache_dir), exist_ok=True)
+    config_dir = Path(xdg_data_home()) / "gtasks-md" / args.user
+    config_dir.mkdir(parents=True, exist_ok=True)
+    cache_dir = Path(xdg_cache_home()) / "gtasks-md" / args.user
+    cache_dir.mkdir(parents=True, exist_ok=True)
 
     logging.basicConfig(
-        filename=f"{xdg_cache_home()}/gtasks-md/log.txt",
+        filename=Path(xdg_cache_home()) / "gtasks-md" / "log.txt",
         format="%(asctime)s %(levelname)-8s %(message)s",
         encoding="utf-8",
         level=logging.INFO,
@@ -137,8 +137,7 @@ def parse_args():
 
 
 def auth(service: GoogleApiService, file: str):
-    with open(file, "r") as src_file:
-        service.save_credentials(src_file.read())
+    service.save_credentials(Path(file).read_text(encoding="utf-8"))
 
 
 def view(service: GoogleApiService):
@@ -157,12 +156,11 @@ def edit(service: GoogleApiService, editor: Editor, backup: Backup):
 def reconcile(service: GoogleApiService, file_path: str, backup: Backup | None = None):
     old_task_lists, old_text = fetch_task_lists(service)
 
-    with open(file_path, "r") as source:
-        new_text = source.read()
-        new_task_lists = markdown_to_task_lists(new_text)
-        if backup:
-            backup.write_backup(old_text)
-        asyncio.run(service.reconcile(old_task_lists, new_task_lists))
+    new_text = Path(file_path).read_text(encoding="utf-8")
+    new_task_lists = markdown_to_task_lists(new_text)
+    if backup:
+        backup.write_backup(old_text)
+    asyncio.run(service.reconcile(old_task_lists, new_task_lists))
 
 
 def rollback(service: GoogleApiService, backup: Backup):

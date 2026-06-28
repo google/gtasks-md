@@ -13,10 +13,10 @@
 # limitations under the License.
 import asyncio
 import logging
-import os
 from collections import defaultdict
 from datetime import datetime
 from enum import Enum, auto
+from pathlib import Path
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -243,9 +243,9 @@ class GoogleApiService:
                     f" (parent: {parent_task_id})"
                 )
 
-        async_tasks = []
-        for op in gen_tasklist_ops():
-            async_tasks.append(asyncio.create_task(apply_task_list_op(op)))
+        async_tasks = [
+            asyncio.create_task(apply_task_list_op(op)) for op in gen_tasklist_ops()
+        ]
         await asyncio.gather(*async_tasks)
 
     def fetch_task_lists(self) -> list[TaskList]:
@@ -352,36 +352,34 @@ class GoogleApiService:
         the process will simply fail.
         """
         creds = None
-        config_dir = f"{xdg_data_home()}/gtasks-md/{self.user}"
-        credentials_file = f"{config_dir}/{CREDENTIALS_FILE}"
-        cache_dir = f"{xdg_cache_home()}/gtasks-md/{self.user}"
-        token_file = f"{cache_dir}/token.json"
+        config_dir = Path(xdg_data_home()) / "gtasks-md" / self.user
+        credentials_file = config_dir / CREDENTIALS_FILE
+        cache_dir = Path(xdg_cache_home()) / "gtasks-md" / self.user
+        token_file = cache_dir / "token.json"
         # The file token.json stores the user's access and refresh tokens, and is
         # created automatically when the authorization flow completes for the first
         # time.
-        if os.path.exists(token_file):
-            creds = Credentials.from_authorized_user_file(token_file, SCOPES)
+        if token_file.exists():
+            creds = Credentials.from_authorized_user_file(str(token_file), SCOPES)
         # If there are no (valid) credentials available, let the user log in.
         if not creds or not creds.valid:
             if creds and creds.expired and creds.refresh_token:
                 creds.refresh(Request())
             else:
                 flow = InstalledAppFlow.from_client_secrets_file(
-                    credentials_file, SCOPES
+                    str(credentials_file), SCOPES
                 )
                 creds = flow.run_local_server(port=0)
             # Save the credentials for the next run
-            with open(token_file, "w+") as token:
-                token.write(creds.to_json())
+            token_file.write_text(creds.to_json(), encoding="utf-8")
 
         return creds
 
     def save_credentials(self, credentials: str):
         """Save credentials to selected user config directory."""
-        config_dir = f"{xdg_data_home()}/gtasks-md/{self.user}"
+        config_dir = Path(xdg_data_home()) / "gtasks-md" / self.user
 
-        with open(f"{config_dir}/{CREDENTIALS_FILE}", "w+") as dest_file:
-            dest_file.write(credentials)
+        (config_dir / CREDENTIALS_FILE).write_text(credentials, encoding="utf-8")
 
     def _get_service(self):
         if not self._service:

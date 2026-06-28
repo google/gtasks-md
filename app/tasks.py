@@ -47,8 +47,7 @@ class Task:
             self.title == other.title
             and self.note == other.note
             and self.status == other.status
-            and len(self.subtasks) == len(other.subtasks)
-            and not any(st != ot for (st, ot) in zip(self.subtasks, other.subtasks))
+            and self.subtasks == other.subtasks
         )
 
     def __str__(self) -> str:
@@ -80,11 +79,7 @@ class TaskList:
     tasks: list[Task]
 
     def __eq__(self, other: TaskList) -> bool:
-        return (
-            self.title == other.title
-            and len(self.tasks) == len(other.tasks)
-            and not any(st != ot for (st, ot) in zip(self.tasks, other.tasks))
-        )
+        return self.title == other.title and self.tasks == other.tasks
 
     def __str__(self) -> str:
         return f"{self.title} ({self.id}): {len(self.tasks)} tasks"
