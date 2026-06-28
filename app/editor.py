@@ -14,6 +14,7 @@
 import os
 import subprocess
 import tempfile
+from pathlib import Path
 
 
 class Editor:
@@ -41,17 +42,15 @@ class Editor:
         program will try the following options: $VISUAL, $EDITOR and "vim".
         """
 
-        tmp_file = ""
-        with tempfile.NamedTemporaryFile(suffix=".md", delete=False) as tmp:
-            tmp.write(str.encode(text))
+        with tempfile.NamedTemporaryFile(
+            suffix=".md",
+            mode="w",
+            encoding="utf-8",
+            delete_on_close=False,
+        ) as tmp:
+            tmp.write(text)
             tmp.flush()
             if subprocess.call([self.editor, tmp.name]) != 0:
                 exit(1)
-            tmp_file = tmp.name
 
-        out = ""
-        with open(tmp_file, "r") as output:
-            out = output.read()
-
-        os.remove(tmp_file)
-        return out
+            return Path(tmp.name).read_text(encoding="utf-8")

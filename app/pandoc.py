@@ -39,22 +39,18 @@ def task_lists_to_markdown(task_lists: list[TaskList]) -> str:
     def text_to_pandoc(text: str):
         elems = []
         for word in text.split():
-            elems.append(Str(word))
-            elems.append(Space())
+            elems.extend((Str(word), Space()))
         return elems[:-1]
 
     def tasks_to_pandoc(tasks: list[Task]):
-        pandoc_tasks = []
         has_notes = any(t.note for t in tasks)
-        for task in tasks:
-            pandoc_tasks.append(task_to_pandoc(task, has_notes))
-        return pandoc_tasks
+        return [task_to_pandoc(task, has_notes) for task in tasks]
 
     def task_to_pandoc(task: Task, parent_contains_notes: bool):
         pandoc_task = []
 
         task_sign = "☒" if task.completed() else "☐"
-        task_title = [Str(task_sign), Space()] + text_to_pandoc(task.title)
+        task_title = [Str(task_sign), Space(), *text_to_pandoc(task.title)]
 
         if parent_contains_notes:
             pandoc_task.append(Para(task_title))
@@ -69,10 +65,11 @@ def task_lists_to_markdown(task_lists: list[TaskList]) -> str:
             pandoc_task.append(Plain(task_title))
 
         if task.subtasks:
-            subtasks = []
             parent_contains_notes = any(st.note for st in task.subtasks)
-            for subtask in task.subtasks:
-                subtasks.append(task_to_pandoc(subtask, parent_contains_notes))
+            subtasks = [
+                task_to_pandoc(subtask, parent_contains_notes)
+                for subtask in task.subtasks
+            ]
 
             pandoc_task.append(OrderedList(ORDERED_FIRST_ELEM, subtasks))
 
@@ -83,9 +80,11 @@ def task_lists_to_markdown(task_lists: list[TaskList]) -> str:
     ]
 
     for task_list in task_lists:
-        content.append(Header(2, EMPTY_ATTRS, text_to_pandoc(task_list.title)))
-        content.append(
-            OrderedList(ORDERED_FIRST_ELEM, tasks_to_pandoc(task_list.tasks))
+        content.extend(
+            (
+                Header(2, EMPTY_ATTRS, text_to_pandoc(task_list.title)),
+                OrderedList(ORDERED_FIRST_ELEM, tasks_to_pandoc(task_list.tasks)),
+            )
         )
 
     return pandoc.write(Pandoc(Meta({}), content))
@@ -108,21 +107,16 @@ def markdown_to_task_lists(text: str) -> list[TaskList]:
                     match items[idx + 1]:
                         case OrderedList(_, tasks):
                             task_list.tasks = parse_tasks(tasks)
-                            return [task_list] + parse_task_lists(items, idx + 2)
+                            return [task_list, *parse_task_lists(items, idx + 2)]
                         case _:
-                            return [task_list] + parse_task_lists(items, idx + 1)
+                            return [task_list, *parse_task_lists(items, idx + 1)]
                 else:
                     return [task_list]
             case _:
                 raise SyntaxError(f"Unexpected item while parsing: {items[idx]}")
 
     def parse_tasks(tasks):
-        parsed_tasks = []
-
-        for i, task in enumerate(tasks):
-            parsed_tasks.append(parse_task(task, i))
-
-        return parsed_tasks
+        return [parse_task(task, i) for i, task in enumerate(tasks)]
 
     def parse_task(task, task_no):
         def match_status(str: Str) -> TaskStatus:

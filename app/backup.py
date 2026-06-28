@@ -25,32 +25,31 @@ class Backup:
         self.user = user
 
     def write_backup(self, text: str):
-        cache_dir = f"{xdg_cache_home()}/gtasks-md/{self.user}"
-        marker_file_path = Path(f"{cache_dir}/marker")
+        cache_dir = Path(xdg_cache_home()) / "gtasks-md" / self.user
+        marker_file_path = cache_dir / "marker"
 
         marker_file_path.touch()
-        with marker_file_path.open("r+") as marker_file:
+        with marker_file_path.open("r+", encoding="utf-8") as marker_file:
             marker = marker_file.read()
             file_no = (int(marker) + 1 if marker else 0) % 10
             marker_file.seek(0)
             marker_file.write(str(file_no))
             marker_file.truncate()
 
-            with open(f"{cache_dir}/{file_no}.bak.md", "w") as backup_file:
-                backup_file.write(text)
+            (cache_dir / f"{file_no}.bak.md").write_text(text, encoding="utf-8")
 
     def discard_backup(self):
-        cache_dir = f"{xdg_cache_home()}/gtasks-md/{self.user}"
-        marker_file_path = Path(f"{cache_dir}/marker")
+        cache_dir = Path(xdg_cache_home()) / "gtasks-md" / self.user
+        marker_file_path = cache_dir / "marker"
 
         if not marker_file_path.is_file():
             return None
 
-        with marker_file_path.open("r+") as marker_file:
+        with marker_file_path.open("r+", encoding="utf-8") as marker_file:
             marker = marker_file.read()
-            file_no = ((int(marker) if marker else 0)) % 10
+            file_no = (int(marker) if marker else 0) % 10
             marker_file.seek(0)
             marker_file.write(str(file_no - 1))
             marker_file.truncate()
 
-            return f"{cache_dir}/{file_no}.bak.md"
+            return str(cache_dir / f"{file_no}.bak.md")
