@@ -22,7 +22,7 @@ dependencies = [
 ]
 
 [tool.setuptools]
-packages = ["app"]
+packages = ["gtasks_md"]
 
 [project.urls]
 Homepage = "https://github.com/google/gtasks-md"
@@ -31,7 +31,7 @@ Homepage = "https://github.com/google/gtasks-md"
 dev = ["pytest"]
 
 [project.scripts]
-gtasks-md = "app.__main__:main"
+gtasks-md = "gtasks_md.__main__:main"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
