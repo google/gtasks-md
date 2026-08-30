@@ -16,7 +16,8 @@ dependencies = [
     "google-api-python-client",
     "google-auth-httplib2",
     "google-auth-oauthlib",
-    "pandoc",
+    "markdown-it-py",
+    "mdformat",
     "xdg",
 ]
 

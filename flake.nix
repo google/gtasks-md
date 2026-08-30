@@ -22,39 +22,20 @@
       system:
       let
         pkgs = (import nixpkgs) { inherit system; };
-        python = pkgs.python3.override {
-          packageOverrides = final: prev: {
-            pandoc = prev.buildPythonPackage rec {
-              pname = "pandoc";
-              version = "2.4";
-              pyproject = true;
-              build-system = [ prev.setuptools ];
-              propagatedBuildInputs = with prev; [
-                plumbum
-                ply
-              ];
-              src = prev.fetchPypi {
-                inherit pname version;
-                sha256 = "sha256-7NH4y7f0GAxrXbShenwadN9RmZX18Ybvgc5yqcvQ3Zo=";
-              };
-            };
-          };
-        };
       in
       {
         formatter = pkgs.nixfmt;
 
         devShell =
           let
-            pythonEnv = python.withPackages (
+            pythonEnv = pkgs.python3.withPackages (
               project.renderers.withPackages {
-                inherit python;
+                python = pkgs.python3;
               }
             );
           in
           pkgs.mkShell {
             buildInputs = with pkgs; [
-              pandoc
               pythonEnv
               ruff
             ];
@@ -63,13 +44,13 @@
         checks = {
           tests =
             let
-              pythonEnv = python.withPackages (
+              pythonEnv = pkgs.python3.withPackages (
                 project.renderers.withPackages {
-                  inherit python;
+                  python = pkgs.python3;
                 }
               );
             in
-            pkgs.runCommand "tests" { buildInputs = [ pythonEnv pkgs.pandoc ]; } ''
+            pkgs.runCommand "tests" { buildInputs = [ pythonEnv ]; } ''
               cd ${self}
               python -m unittest discover -s tests
               touch $out
@@ -86,16 +67,9 @@
 
           gtasks-md =
             let
-              attrs = project.renderers.buildPythonPackage { inherit python; };
+              attrs = project.renderers.buildPythonPackage { python = pkgs.python3; };
             in
-            python.pkgs.buildPythonApplication (
-              attrs
-              // {
-                makeWrapperArgs = [
-                  "--prefix PATH : ${pkgs.lib.makeBinPath [ pkgs.pandoc ]}"
-                ];
-              }
-            );
+            pkgs.python3.pkgs.buildPythonApplication attrs;
         };
       }
     );

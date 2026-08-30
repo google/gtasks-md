@@ -23,7 +23,7 @@ from xdg import xdg_cache_home, xdg_data_home
 from .backup import Backup
 from .editor import Editor
 from .googleapi import GoogleApiService
-from .pandoc import markdown_to_task_lists, task_lists_to_markdown
+from .parser import markdown_to_task_lists, task_lists_to_markdown
 
 
 def main():

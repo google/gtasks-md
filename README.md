@@ -114,9 +114,9 @@ something goes wrong.
 
     ``` sh
     # Ubuntu
-    $ sudo apt install pandoc pip
+    $ sudo apt install pip
     # Fedora
-    $ sudo dnf install pandoc pip
+    $ sudo dnf install pip
     ```
 
 2.  Install the [PyPI package](https://pypi.org/project/gtasks-md) in any of the
@@ -146,7 +146,7 @@ something goes wrong.
 
 ``` sh
 # 1. Install binary dependencies
-$ sudo apt install pandoc pip
+$ sudo apt install pip
 # 2. Install the project
 $ pip install .
 # 3. Run gtasks-md
@@ -162,8 +162,7 @@ $ nix develop
 $ gtasks-md --help
 ```
 
-[^1]: Subset of [Pandoc's
-    Markdown](https://pandoc.org/MANUAL.html#pandocs-markdown) to be exact
+[^1]: Subset of [CommonMark](https://commonmark.org/) to be exact
 
 [^2]: Shamelessly stolen from
     [calendar.vim](https://github.com/itchyny/calendar.vim#important-notice)
