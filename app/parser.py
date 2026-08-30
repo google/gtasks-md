@@ -24,7 +24,8 @@ from .tasks import Task, TaskList, TaskStatus
 # default of repeating "1.".
 MDFORMAT_OPTIONS = {"number": True}
 
-CHECKBOX_REGEX = re.compile(r"^\[([ xX])\](?:[ \t]+|$)")
+# CommonMark plus native GFM task-list parsing
+MARKDOWN_IT_OPTIONS = {"tasklists": True}
 
 
 def task_lists_to_markdown(task_lists: list[TaskList]) -> str:
@@ -42,7 +43,7 @@ def task_lists_to_markdown(task_lists: list[TaskList]) -> str:
 def markdown_to_task_lists(text: str) -> list[TaskList]:
     """Parses a CommonMark document into Task Lists."""
 
-    root = SyntaxTreeNode(MarkdownIt().parse(text))
+    root = SyntaxTreeNode(MarkdownIt(options_update=MARKDOWN_IT_OPTIONS).parse(text))
     lines = text.split("\n")
 
     task_lists: list[TaskList] = []
@@ -63,8 +64,6 @@ def markdown_to_task_lists(text: str) -> list[TaskList]:
 
 
 def _tasks_to_markdown(tasks: list[Task], indent: str = "") -> str:
-    # Mirror the previous pandoc behavior: when any sibling has a note the
-    # whole list is rendered loose (blank lines between items).
     loose = any(task.note for task in tasks)
     items = [
         _task_to_markdown(task, position + 1, indent, loose)
@@ -105,10 +104,13 @@ def _parse_task(item: SyntaxTreeNode, position: int, lines: list[str]) -> Task:
         raise SyntaxError(f"Expected Task status and title, got {item.pretty()}")
 
     title = _inline_source(blocks[0])
-    status = TaskStatus.UNKNOWN
-    if match := CHECKBOX_REGEX.match(title):
-        status = TaskStatus.COMPLETED if match.group(1) in "xX" else TaskStatus.PENDING
-        title = title[match.end() :].strip()
+    match item.meta.get("checked"):
+        case True:
+            status = TaskStatus.COMPLETED
+        case False:
+            status = TaskStatus.PENDING
+        case None:
+            status = TaskStatus.UNKNOWN
 
     blocks = blocks[1:]
     subtasks = []
