@@ -13,6 +13,7 @@
 # limitations under the License.
 import asyncio
 import logging
+import threading
 from collections import defaultdict
 from datetime import datetime
 from enum import Enum, auto
@@ -45,7 +46,9 @@ class GoogleApiService:
         self.completed_after = completed_after
         self.completed_before = completed_before
         self.task_status = TaskStatus(task_status) if task_status else None
-        self._service = None
+        self._credentials = None
+        self._credentials_lock = threading.Lock()
+        self._local = threading.local()
 
     def tasks(self):
         return self._get_service().tasks()
@@ -89,7 +92,7 @@ class GoogleApiService:
 
             return list(task_list_to_op.values())
 
-        async def apply_task_list_op(op):
+        def apply_task_list_op(op):
             match op:
                 case (ReconcileOp.DELETE, task_list):
                     self.task_lists().delete(tasklist=task_list.id).execute()
@@ -234,10 +237,12 @@ class GoogleApiService:
                     f" (parent: {parent_task_id})"
                 )
 
-        async_tasks = [
-            asyncio.create_task(apply_task_list_op(op)) for op in gen_tasklist_ops()
-        ]
-        await asyncio.gather(*async_tasks)
+        # The Google API client is blocking, so run every task list
+        # operation in its own worker thread to reconcile task lists
+        # concurrently.
+        await asyncio.gather(
+            *(asyncio.to_thread(apply_task_list_op, op) for op in gen_tasklist_ops())
+        )
 
     def fetch_task_lists(self) -> list[TaskList]:
         """
@@ -373,15 +378,28 @@ class GoogleApiService:
         (config_dir / CREDENTIALS_FILE).write_text(credentials, encoding="utf-8")
 
     def _get_service(self):
-        if not self._service:
-            self._service = build(
+        """
+        Returns a per-thread Google API service object.
+
+        Task list operations run concurrently in worker threads and the
+        underlying httplib2 transport is not thread-safe, so every thread
+        gets its own service instance sharing one set of credentials.
+        """
+        if not hasattr(self._local, "service"):
+            self._local.service = build(
                 "tasks",
                 "v1",
-                credentials=self.get_credentials(),
+                credentials=self._get_credentials(),
                 cache_discovery=False,
                 static_discovery=True,
             )
-        return self._service
+        return self._local.service
+
+    def _get_credentials(self) -> Credentials:
+        with self._credentials_lock:
+            if not self._credentials:
+                self._credentials = self.get_credentials()
+            return self._credentials
 
 
 class ReconcileOp(Enum):
