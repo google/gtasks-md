@@ -13,6 +13,7 @@
 # limitations under the License.
 import os
 import subprocess
+import sys
 import tempfile
 from pathlib import Path
 
@@ -51,6 +52,6 @@ class Editor:
             tmp.write(text)
             tmp.flush()
             if subprocess.call([self.editor, tmp.name]) != 0:
-                exit(1)
+                sys.exit(1)
 
             return Path(tmp.name).read_text(encoding="utf-8")

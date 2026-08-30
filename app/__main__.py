@@ -73,7 +73,7 @@ def parse_args():
     parser.add_argument(
         "--completed-after",
         dest="completed_after",
-        default=(datetime.datetime.now() - timedelta(days=7)).astimezone(),
+        default=(datetime.datetime.now(datetime.UTC) - timedelta(days=7)).astimezone(),
         help="Only show tasks completed after given date. "
         "The date must be in format YYYY-MM-DD. Defaults to one week ago.",
         type=parse_date,

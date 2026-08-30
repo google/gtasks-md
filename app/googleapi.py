@@ -29,6 +29,8 @@ from .tasks import Task, TaskList, TaskStatus
 CREDENTIALS_FILE = "credentials.json"
 SCOPES = ["https://www.googleapis.com/auth/tasks"]
 
+logger = logging.getLogger(__name__)
+
 
 # https://googleapis.github.io/google-api-python-client/docs/dyn/tasks_v1.html
 class GoogleApiService:
@@ -91,21 +93,21 @@ class GoogleApiService:
             match op:
                 case (ReconcileOp.DELETE, task_list):
                     self.task_lists().delete(tasklist=task_list.id).execute()
-                    logging.info(f"Deleted Task List {task_list.title}")
+                    logger.info(f"Deleted Task List {task_list.title}")
 
                 case (ReconcileOp.INSERT, task_list):
                     response = (
                         self.task_lists().insert(body=task_list.to_request()).execute()
                     )
                     reconcile_tasks(response["id"], [], task_list.tasks)
-                    logging.info(f"Inserted Task List {task_list.title}")
+                    logger.info(f"Inserted Task List {task_list.title}")
 
                 case (ReconcileOp.UPDATE, old_task_list, new_task_list):
                     if old_task_list != new_task_list:
                         reconcile_tasks(
                             old_task_list.id, old_task_list.tasks, new_task_list.tasks
                         )
-                        logging.info(f"Updated Task List {old_task_list.title}")
+                        logger.info(f"Updated Task List {old_task_list.title}")
 
         def reconcile_tasks(task_list_id, old_tasks, new_tasks, parent_task_id=""):
             updated_tasks = apply_task_ops(
@@ -127,16 +129,16 @@ class GoogleApiService:
                 def callback(request_id, response, exception):
                     del request_id, response
                     if exception:
-                        logging.error(f"Failed to delete task {task_title}")
+                        logger.error(f"Failed to delete task {task_title}")
                     else:
-                        logging.info(f"Deleted Task {task_title}")
+                        logger.info(f"Deleted Task {task_title}")
 
                 return callback
 
             def insert_callback(task, idx):
                 def callback(_, response, exception):
                     if exception:
-                        logging.error(f"Failed to insert task {task.title}")
+                        logger.error(f"Failed to insert task {task.title}")
 
                     task_id = response["id"]
                     new_tasks[idx].id = task_id  # Needed for fix_task_order
@@ -145,7 +147,7 @@ class GoogleApiService:
                         task_list_id, [], task.subtasks, task_id
                     )
                     new_tasks[idx].subtasks = updated_subtasks
-                    logging.info(f"Inserted Task {task.title}")
+                    logger.info(f"Inserted Task {task.title}")
 
                 return callback
 
@@ -153,14 +155,14 @@ class GoogleApiService:
                 def callback(request_id, response, exception):
                     del request_id, response
                     if exception:
-                        logging.error(f"Failed to update Task {old_task.title}")
+                        logger.error(f"Failed to update Task {old_task.title}")
                         return
 
                     updated_subtasks = reconcile_tasks(
                         task_list_id, old_task.subtasks, new_task.subtasks, old_task.id
                     )
                     new_tasks[idx].subtasks = updated_subtasks
-                    logging.info(f"Updated Task {old_task.title}")
+                    logger.info(f"Updated Task {old_task.title}")
 
                 return callback
 
@@ -227,7 +229,7 @@ class GoogleApiService:
                 ).execute()
 
                 prev_title = previous_task.title if previous_task else "NONE"
-                logging.info(
+                logger.info(
                     f"Moved task {task.title} after {prev_title}"
                     f" (parent: {parent_task_id})"
                 )
@@ -270,7 +272,7 @@ class GoogleApiService:
 
             def callback(_, response, exception):
                 if exception:
-                    logging.error(
+                    logger.error(
                         f"Error on fetching Tasks from "
                         f"Task List {task_list_id}: {exception}"
                     )
