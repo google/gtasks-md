@@ -22,42 +22,38 @@
       system:
       let
         pkgs = (import nixpkgs) { inherit system; };
+        pythonEnv = pkgs.python3.withPackages (
+          project.renderers.withPackages {
+            python = pkgs.python3;
+          }
+        );
       in
       {
         formatter = pkgs.nixfmt;
 
-        devShell =
-          let
-            pythonEnv = pkgs.python3.withPackages (
-              project.renderers.withPackages {
-                python = pkgs.python3;
-              }
-            );
-          in
-          pkgs.mkShell {
-            buildInputs = with pkgs; [
-              pythonEnv
-              ruff
-            ];
-          };
+        devShells.default = pkgs.mkShell {
+          buildInputs = with pkgs; [
+            pythonEnv
+            ruff
+          ];
+        };
 
         checks = {
-          tests =
-            let
-              pythonEnv = pkgs.python3.withPackages (
-                project.renderers.withPackages {
-                  python = pkgs.python3;
-                }
-              );
-            in
-            pkgs.runCommand "tests" { buildInputs = [ pythonEnv ]; } ''
-              cd ${self}
-              python -m unittest discover -s tests
-              touch $out
-            '';
+          package = self.packages.${system}.default;
+
+          tests = pkgs.runCommand "tests" { buildInputs = [ pythonEnv ]; } ''
+            cd ${self}
+            python -m unittest discover -s tests
+            touch $out
+          '';
 
           ruff = pkgs.runCommand "ruff" { buildInputs = [ pkgs.ruff ]; } ''
             ruff check --no-cache ${self}
+            touch $out
+          '';
+
+          nixfmt = pkgs.runCommand "nixfmt" { buildInputs = [ pkgs.nixfmt ]; } ''
+            find ${self} -name '*.nix' -exec nixfmt --check {} +
             touch $out
           '';
         };
@@ -69,7 +65,7 @@
             let
               attrs = project.renderers.buildPythonPackage { python = pkgs.python3; };
             in
-            pkgs.python3.pkgs.buildPythonApplication attrs;
+            pkgs.python3.pkgs.buildPythonApplication (attrs // { pythonImportsCheck = [ "gtasks_md" ]; });
         };
       }
     );

@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -12,6 +12,16 @@ requires-python = ">=3.13"
 authors = [
     { name = "Michal Kielbowicz", email = "gtasks-md@kielbowi.cz" },
 ]
+keywords = ["google-tasks", "markdown", "todo", "cli"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: End Users/Desktop",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Office/Business :: Scheduling",
+    "Topic :: Utilities",
+]
 dependencies = [
     "google-api-python-client",
     "google-auth-httplib2",
@@ -22,19 +32,13 @@ dependencies = [
 ]
 
 [tool.setuptools]
-packages = ["app"]
+packages = ["gtasks_md"]
 
 [project.urls]
 Homepage = "https://github.com/google/gtasks-md"
 
-[project.optional-dependencies]
-dev = ["pytest"]
-
 [project.scripts]
-gtasks-md = "app.__main__:main"
-
-[tool.pytest.ini_options]
-testpaths = ["tests"]
+gtasks-md = "gtasks_md.__main__:main"
 
 [tool.ruff.lint]
 extend-select = ["I", "N"]

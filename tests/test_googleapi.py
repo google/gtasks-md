@@ -17,8 +17,8 @@ import unittest
 from collections import defaultdict
 from itertools import count
 
-from app.googleapi import GoogleApiService
-from app.tasks import Task, TaskList, TaskStatus
+from gtasks_md.googleapi import GoogleApiService
+from gtasks_md.tasks import Task, TaskList, TaskStatus
 
 
 class FakeRequest:
