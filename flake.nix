@@ -22,34 +22,24 @@
       system:
       let
         pkgs = (import nixpkgs) { inherit system; };
+        pythonEnv = pkgs.python3.withPackages (
+          project.renderers.withPackages {
+            python = pkgs.python3;
+          }
+        );
       in
       {
         formatter = pkgs.nixfmt;
 
-        devShell =
-          let
-            pythonEnv = pkgs.python3.withPackages (
-              project.renderers.withPackages {
-                python = pkgs.python3;
-              }
-            );
-          in
-          pkgs.mkShell {
-            buildInputs = with pkgs; [
-              pythonEnv
-              ruff
-            ];
-          };
+        devShell = pkgs.mkShell {
+          buildInputs = with pkgs; [
+            pythonEnv
+            ruff
+          ];
+        };
 
         checks = {
           tests =
-            let
-              pythonEnv = pkgs.python3.withPackages (
-                project.renderers.withPackages {
-                  python = pkgs.python3;
-                }
-              );
-            in
             pkgs.runCommand "tests" { buildInputs = [ pythonEnv ]; } ''
               cd ${self}
               python -m unittest discover -s tests
