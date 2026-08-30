@@ -39,6 +39,8 @@
         };
 
         checks = {
+          package = self.packages.${system}.default;
+
           tests =
             pkgs.runCommand "tests" { buildInputs = [ pythonEnv ]; } ''
               cd ${self}
@@ -59,7 +61,9 @@
             let
               attrs = project.renderers.buildPythonPackage { python = pkgs.python3; };
             in
-            pkgs.python3.pkgs.buildPythonApplication attrs;
+            pkgs.python3.pkgs.buildPythonApplication (
+              attrs // { pythonImportsCheck = [ "gtasks_md" ]; }
+            );
         };
       }
     );
