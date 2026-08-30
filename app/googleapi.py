@@ -114,23 +114,12 @@ class GoogleApiService:
                 task_list_id,
             )
 
-            completed_tasks = []
-            incompleted_tasks = []
-            for task in updated_tasks:
-                if task.completed():
-                    completed_tasks.append(task)
-                else:
-                    incompleted_tasks.append(task)
-            fix_task_order(
-                task_list_id,
-                list(incompleted_tasks),
-                parent_task_id,
-            )
-            fix_task_order(
-                task_list_id,
-                list(completed_tasks),
-                parent_task_id,
-            )
+            # Completed tasks are not reordered: Google rejects moving tasks
+            # that were completed and hidden (cleared) by the Google Tasks
+            # app, and their ordering is cosmetic anyway as the app shows
+            # completed tasks sorted by completion date.
+            incompleted_tasks = [t for t in updated_tasks if not t.completed()]
+            fix_task_order(task_list_id, incompleted_tasks, parent_task_id)
             return updated_tasks
 
         def apply_task_ops(ops, new_tasks, task_list_id):
