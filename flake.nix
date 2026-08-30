@@ -31,7 +31,7 @@
       {
         formatter = pkgs.nixfmt;
 
-        devShell = pkgs.mkShell {
+        devShells.default = pkgs.mkShell {
           buildInputs = with pkgs; [
             pythonEnv
             ruff
