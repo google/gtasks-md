@@ -1,6 +1,9 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["config:recommended"],
+  "github-actions": {
+    "enabled": false // Renovate using GITHUB_TOKEN can't modify workflows
+  },
   "nix": {
     "enabled": true
   },

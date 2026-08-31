@@ -4,7 +4,11 @@ on:
   - cron: '0 3 * * *'
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
+  pull-requests: write
+  issues: write
+  checks: read
+  statuses: read
 jobs:
   renovate:
     runs-on: ubuntu-latest
@@ -13,4 +17,4 @@ jobs:
     - uses: renovatebot/github-action@39b914146caeff8cd512e61c8992f1d5913af85c # v46.2.5
       with:
         configurationFile: .github/renovate-config.js
-        token: ${{ secrets.RENOVATE_TOKEN }}
+        token: ${{ secrets.GITHUB_TOKEN }}
