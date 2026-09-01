@@ -172,7 +172,7 @@ class FakeGoogleApiService(GoogleApiService):
     """GoogleApiService whose API surface is backed by a FakeServer."""
 
     def __init__(self, server: FakeServer):
-        super().__init__("test", None, None, "")
+        super().__init__("test", None, None, None)
         self._server = server
 
     def tasks(self):

@@ -23,9 +23,7 @@
       let
         pkgs = (import nixpkgs) { inherit system; };
         pythonEnv = pkgs.python3.withPackages (
-          project.renderers.withPackages {
-            python = pkgs.python3;
-          }
+          ps: (project.renderers.withPackages { python = pkgs.python3; } ps) ++ [ ps.mypy ]
         );
       in
       {
@@ -49,6 +47,12 @@
 
           ruff = pkgs.runCommand "ruff" { buildInputs = [ pkgs.ruff ]; } ''
             ruff check --no-cache ${self}
+            touch $out
+          '';
+
+          mypy = pkgs.runCommand "mypy" { buildInputs = [ pythonEnv ]; } ''
+            cd ${self}
+            MYPY_CACHE_DIR="$TMPDIR/mypy-cache" mypy gtasks_md tests
             touch $out
           '';
 
