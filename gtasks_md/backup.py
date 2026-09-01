@@ -48,8 +48,12 @@ class Backup:
         with marker_file_path.open("r+", encoding="utf-8") as marker_file:
             marker = marker_file.read()
             file_no = (int(marker) if marker else 0) % 10
+            backup_file = cache_dir / f"{file_no}.bak.md"
+            if not backup_file.is_file():
+                return None
+
             marker_file.seek(0)
-            marker_file.write(str(file_no - 1))
+            marker_file.write(str((file_no - 1) % 10))
             marker_file.truncate()
 
-            return str(cache_dir / f"{file_no}.bak.md")
+            return str(backup_file)
