@@ -10,8 +10,8 @@ jobs:
   update-flake-lock:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v6
-    - uses: DeterminateSystems/nix-installer-action@v21
-    - uses: DeterminateSystems/update-flake-lock@v28
+    - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+    - uses: DeterminateSystems/nix-installer-action@c5a866b6ab867e88becbed4467b93592bce69f8a # v21
+    - uses: DeterminateSystems/update-flake-lock@834c491b2ece4de0bbd00d85214bb5e83b4da5c6 # v28
       with:
         pr-title: 'flake.lock: Update'
