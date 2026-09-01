@@ -1,12 +1,44 @@
 name: Publish to PyPI
 on:
   push:
-    tags:
-    - v*
+    branches:
+    - main
+    paths:
+    - pyproject.toml
 jobs:
-  publish-pypi:
+  tag:
     runs-on: ubuntu-latest
     permissions:
+      contents: write
+    outputs:
+      new-version: ${{ steps.tag.outputs.new-version }}
+    steps:
+    - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+    - name: Tag if version is new
+      id: tag
+      run: |
+        version="$(grep -Po '^version = "\K[^"]+' pyproject.toml)"
+        # Errors (network/auth) fail the job here instead of being
+        # misread as "tag absent"; no match exits 0 with empty output.
+        tag_sha="$(git ls-remote --tags origin "refs/tags/v${version}")"
+        tag_sha="${tag_sha%%$'\t'*}"
+        if [[ -z "${tag_sha}" ]]; then
+          git tag "v${version}"
+          git push origin "v${version}"
+          echo "new-version=true" >> "$GITHUB_OUTPUT"
+        elif [[ "${tag_sha}" == "${GITHUB_SHA}" ]]; then
+          echo "Tag v${version} already points at this commit; retrying publish."
+          echo "new-version=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "Tag v${version} already exists, skipping."
+          echo "new-version=false" >> "$GITHUB_OUTPUT"
+        fi
+  publish-pypi:
+    needs: tag
+    if: needs.tag.outputs.new-version == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
       id-token: write
     steps:
     - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
@@ -21,3 +53,5 @@ jobs:
     # https://packaging.python.org/en/latest/guides/publishing-package-distribution-releases-using-github-actions-ci-cd-workflows/
     - name: Publish distribution 📦 to PyPI
       uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # v1.14.2
+      with:
+        skip-existing: true
