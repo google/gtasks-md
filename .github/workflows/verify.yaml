@@ -9,7 +9,6 @@ jobs:
     steps:
     - uses: actions/checkout@v6
     - uses: DeterminateSystems/nix-installer-action@v21
-    - uses: DeterminateSystems/magic-nix-cache-action@v13
     - run: nix flake check
   readme-test:
     runs-on: ubuntu-latest
