@@ -23,7 +23,9 @@ class TaskStatus(StrEnum):
     COMPLETED = "completed"
 
     @classmethod
-    def _missing_(cls, value: str):
+    def _missing_(cls, value: object) -> TaskStatus | None:
+        if not isinstance(value, str):
+            return None
         for member in cls:
             if member.value.casefold() == value.casefold():
                 return member
@@ -42,7 +44,12 @@ class Task:
     status: TaskStatus
     subtasks: list[Task]
 
-    def __eq__(self, other: Task) -> bool:
+    def __eq__(self, other: object) -> bool:
+        """Compares Task contents, deliberately ignoring server-assigned
+        state (id, position) so that reconcile can match freshly parsed
+        tasks against fetched ones."""
+        if not isinstance(other, Task):
+            return NotImplemented
         return (
             self.title == other.title
             and self.note == other.note
@@ -78,7 +85,11 @@ class TaskList:
     title: str
     tasks: list[Task]
 
-    def __eq__(self, other: TaskList) -> bool:
+    def __eq__(self, other: object) -> bool:
+        """Compares TaskList contents, deliberately ignoring the
+        server-assigned id. See Task.__eq__."""
+        if not isinstance(other, TaskList):
+            return NotImplemented
         return self.title == other.title and self.tasks == other.tasks
 
     def __str__(self) -> str:

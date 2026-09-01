@@ -24,6 +24,7 @@ from .backup import Backup
 from .editor import Editor
 from .googleapi import GoogleApiService
 from .parser import markdown_to_task_lists, task_lists_to_markdown
+from .tasks import TaskStatus
 
 
 def main():
@@ -89,9 +90,9 @@ def parse_args():
     parser.add_argument(
         "--status",
         dest="status",
-        default="",
+        default=None,
         help="Task status. One of: needsAction, completed.",
-        type=str.lower,
+        type=TaskStatus,
     )
     parser.add_argument(
         "--user",

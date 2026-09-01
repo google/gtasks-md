@@ -134,5 +134,7 @@ def _blocks_source(blocks: list[SyntaxTreeNode], lines: list[str]) -> str:
 
     if not blocks:
         return ""
-    start, end = blocks[0].map[0], blocks[-1].map[1]
+    start_map, end_map = blocks[0].map, blocks[-1].map
+    assert start_map and end_map  # block-level nodes always carry a source map
+    start, end = start_map[0], end_map[1]
     return textwrap.dedent("\n".join(lines[start:end])).strip()

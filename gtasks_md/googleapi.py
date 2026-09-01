@@ -18,6 +18,7 @@ from collections import defaultdict
 from datetime import datetime
 from enum import Enum, auto
 from pathlib import Path
+from typing import Literal
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -40,13 +41,13 @@ class GoogleApiService:
         user: str,
         completed_after: datetime | None,
         completed_before: datetime | None,
-        task_status: TaskStatus,
+        task_status: TaskStatus | None,
     ):
         self.user = user
         self.completed_after = completed_after
         self.completed_before = completed_before
-        self.task_status = TaskStatus(task_status) if task_status else None
-        self._credentials = None
+        self.task_status = task_status
+        self._credentials: Credentials | None = None
         self._credentials_lock = threading.Lock()
         self._local = threading.local()
 
@@ -76,7 +77,7 @@ class GoogleApiService:
         """
 
         def gen_tasklist_ops():
-            task_list_to_op = {}
+            task_list_to_op: dict[str, TaskListOp] = {}
             for task_list in old_task_lists:
                 task_list_to_op[task_list.title] = (ReconcileOp.DELETE, task_list)
 
@@ -200,7 +201,7 @@ class GoogleApiService:
             return new_tasks
 
         def gen_task_ops(old_tasks: list[Task], new_tasks: list[Task]):
-            task_to_op = {}
+            task_to_op: dict[str, TaskOp] = {}
             for task in old_tasks:
                 task_to_op[task.title] = (ReconcileOp.DELETE, task)
 
@@ -252,8 +253,8 @@ class GoogleApiService:
         tasks for these task lists that are either completed at most 30 days ago
         or are still pending completion.
         """
-        id_to_task_list = {}
-        task_id_to_subtasks = defaultdict(list)
+        id_to_task_list: dict[str, TaskList] = {}
+        task_id_to_subtasks: defaultdict[str, list[Task]] = defaultdict(list)
 
         def create_request_with_callback(task_list_id, completed):
             def fetch_tasks_request(task_list_id, completed, next_page_token=""):
@@ -406,3 +407,16 @@ class ReconcileOp(Enum):
     INSERT = auto()
     DELETE = auto()
     UPDATE = auto()
+
+
+type TaskListOp = (
+    tuple[Literal[ReconcileOp.INSERT], TaskList]
+    | tuple[Literal[ReconcileOp.DELETE], TaskList]
+    | tuple[Literal[ReconcileOp.UPDATE], TaskList, TaskList]  # (op, old, new)
+)
+
+type TaskOp = (
+    tuple[Literal[ReconcileOp.INSERT], Task, int]  # (op, task, idx)
+    | tuple[Literal[ReconcileOp.DELETE], Task]
+    | tuple[Literal[ReconcileOp.UPDATE], Task, Task, int]  # (op, old, new, idx)
+)

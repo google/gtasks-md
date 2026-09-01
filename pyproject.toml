@@ -42,3 +42,18 @@ gtasks-md = "gtasks_md.__main__:main"
 
 [tool.ruff.lint]
 extend-select = ["I", "N"]
+
+[tool.mypy]
+python_version = "3.13"
+check_untyped_defs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+
+[[tool.mypy.overrides]]
+module = [
+    "google.*",
+    "google_auth_oauthlib.*",
+    "googleapiclient.*",
+    "xdg",
+]
+ignore_missing_imports = true
