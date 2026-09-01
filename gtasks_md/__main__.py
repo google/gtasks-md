@@ -18,7 +18,7 @@ import logging
 from datetime import timedelta
 from pathlib import Path
 
-from xdg import xdg_cache_home, xdg_data_home
+from xdg_base_dirs import xdg_cache_home, xdg_data_home
 
 from .backup import Backup
 from .editor import Editor
