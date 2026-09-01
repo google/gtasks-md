@@ -24,7 +24,7 @@ from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
-from xdg import xdg_cache_home, xdg_data_home
+from xdg_base_dirs import xdg_cache_home, xdg_data_home
 
 from .tasks import Task, TaskList, TaskStatus
 

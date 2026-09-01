@@ -13,7 +13,7 @@
 # limitations under the License.
 from pathlib import Path
 
-from xdg import xdg_cache_home
+from xdg_base_dirs import xdg_cache_home
 
 
 class Backup:

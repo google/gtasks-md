@@ -24,11 +24,10 @@ classifiers = [
 ]
 dependencies = [
     "google-api-python-client",
-    "google-auth-httplib2",
     "google-auth-oauthlib",
     "markdown-it-py>=4.1",
     "mdformat",
-    "xdg",
+    "xdg-base-dirs",
 ]
 
 [tool.setuptools]
@@ -54,6 +53,5 @@ module = [
     "google.*",
     "google_auth_oauthlib.*",
     "googleapiclient.*",
-    "xdg",
 ]
 ignore_missing_imports = true
