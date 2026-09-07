@@ -2,6 +2,10 @@ version: 2
 updates:
 - package-ecosystem: nix
   directory: /
+  groups:
+    flake-inputs:
+      patterns:
+      - "*"
   cooldown:
     default-days: 7
   schedule:
