@@ -2,6 +2,8 @@ version: 2
 updates:
 - package-ecosystem: nix
   directory: /
+  cooldown:
+    default-days: 7
   schedule:
     interval: weekly
     day: monday
@@ -9,6 +11,8 @@ updates:
     timezone: Etc/UTC
 - package-ecosystem: github-actions
   directory: /
+  cooldown:
+    default-days: 7
   schedule:
     interval: weekly
     day: monday
