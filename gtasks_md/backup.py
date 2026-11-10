@@ -31,7 +31,12 @@ class Backup:
         marker_file_path.touch()
         with marker_file_path.open("r+", encoding="utf-8") as marker_file:
             marker = marker_file.read()
-            file_no = (int(marker) + 1 if marker else 0) % 10
+            try:
+                file_no = (int(marker) + 1 if marker else 0) % 10
+            except ValueError:
+                # A corrupt marker file (hand-edited, truncated, ...) must
+                # not break backups; start over from slot 0.
+                file_no = 0
             marker_file.seek(0)
             marker_file.write(str(file_no))
             marker_file.truncate()
