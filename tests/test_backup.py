@@ -66,3 +66,15 @@ class TestBackup(unittest.TestCase):
         backup_file = self.backup.discard_backup()
         self.assertEqual("0.bak.md", Path(backup_file).name)
         self.assertEqual("new text", Path(backup_file).read_text(encoding="utf-8"))
+
+    def test_write_with_corrupt_marker_starts_over(self):
+        (self.cache_dir / "marker").write_text("garbage", encoding="utf-8")
+
+        self.backup.write_backup("recovered text")
+
+        backup_file = self.backup.discard_backup()
+        self.assertIsNotNone(backup_file)
+        self.assertEqual("0.bak.md", Path(backup_file).name)
+        self.assertEqual(
+            "recovered text", Path(backup_file).read_text(encoding="utf-8")
+        )
